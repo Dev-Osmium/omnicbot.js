@@ -8,9 +8,6 @@ const Constants = require('./constants.js');
 const config = require(Constants.Util.CONFIG);
 const log = require(Constants.Util.LOGGER);
 
-
-log.warn("test");
-
 // Database stuff
 const db           = require('./util/dbcheck.js');
 // Load all the commands + aliases
@@ -30,18 +27,17 @@ bot.on('error', e => { log.error(e); });
 
 
 bot.on("ready", () => {
-	console.log("Prêt à servir " + bot.channels.length + " canaux!");
-/*	
-	for (var server in bot.servers) { 
+	log.info("Prêt à servir dans " + bot.channels.length + " canaux sur " + bot.servers.length + " serveur.");
+	for(let server of bot.servers) {
 		let adminMembers = server.usersWithRole(server.roles.get("name", config.ownerRole));
-		for(var admin in adminMembers) { 
-			log.info(admin.username + " added to Admin list");
+		for(let admin of adminMembers) { 
+			log.info(admin.username + " added to Admin list on " + server.name);
 		}
 		let modMembers = server.usersWithRole(server.roles.get("name", config.modRole));
-		for (var mod in modMembers) {
-			log.info(mod.username + " added to Mod list");
+		for (let mod of modMembers) {
+			log.info(mod.username + " added to Mod list on " + server.name);
 		}
-	}*/
+	}
 });
 
 //when the bot disconnects

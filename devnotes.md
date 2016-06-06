@@ -41,9 +41,6 @@
 				bot.reply( msg, "Le lien permanent pour se joindre à Overwatch.Quebec est http://discord.overwatch.quebec/ ! \n Si vous utilisez l'application mobile Discord et désirez joindre le serveur, utilisez le code d'invitation : `0116E9FlHOMq6dIgF`");
 			}
 
-			if( msg.content.startsWith(".echo")) {
-				bot.reply( msg, msg.content.substr(msg.content.indexOf(' ')+1));
-			}
 
 			if( msg.content.startsWith(".tts")) {
 				bot.replyTTS( msg, msg.content.substr(msg.content.indexOf(' ')+1));

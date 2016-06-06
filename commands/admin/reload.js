@@ -3,7 +3,10 @@ const Constants = require('./../../constants.js');
 const Command   = require('./../Command.js');
 const config    = require(Constants.Util.CONFIG);
 
-const about = new Command('Gives you information about the bot', '', 0, null, (bot, msg, suffix) => {
+const reload = new Command('Reloads a specific module or command. Use `reload path/command.js` to initiate', '', 0, null, (bot, msg, suffix) => {
+
+
+
     var msgArr = [];
     
     msgArr.push('```xl\n[Author]           LuckyEvie#0354');
@@ -15,4 +18,4 @@ const about = new Command('Gives you information about the bot', '', 0, null, (b
     bot.sendMessage(msg.channel, msgArr);     
 });
 
-module.exports = about;
+module.exports = reload;

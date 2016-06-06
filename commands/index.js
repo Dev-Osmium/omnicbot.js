@@ -1,7 +1,7 @@
 const Constants = require('./../constants.js'); 
 
 const   about   = require('./admin/about.js'),
-        echo    = require('./admin/echo.js');
+        echo    = require('./util/echo.js');
 
 
 exports.aliases = {
