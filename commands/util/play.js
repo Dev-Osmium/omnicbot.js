@@ -1,7 +1,7 @@
 'use strict';
 
 const Discord = require("discord.js");
-const ytdl = require("ytdl");
+const ytdl = require("ytdl-core");
 const Constants = require('./../../constants.js'); 
 
 const Command   = require('./../Command.js');
