@@ -14,6 +14,7 @@ const echo = new Command('Plays YouTube Video', '', 1, null, (bot, msg, suffix) 
     } else {
         let parts = suffix.split(" "),
             channel = msg.server.channels.get(parts[0]);
+        bot.sendMessage(msg, "Je vais tenter de jouer " + parts[1] + " sur " + channel);
         if (channel instanceof Discord.VoiceChannel) {
             bot.joinVoiceChannel(channel).then(connection => {
               let url = parts[1];
@@ -28,6 +29,8 @@ const echo = new Command('Plays YouTube Video', '', 1, null, (bot, msg, suffix) 
             .catch(err => {
               console.log('Playback Error: ' + err);
             });
+        } else {
+            bot.sendMessage(msg, "Apparement le canal n'est pas vocal... ché pas quoi faire là, boss.");
         }
     }
 });
