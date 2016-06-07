@@ -18,8 +18,6 @@ const commands = require('./commands/index.js').commands,
 const util = require( "util" );
 const reload = require("require-reload");
 
-var globaltimers = [];
-
 // Catch discord.js errors
 bot.on('error', e => { log.error(e); });
 
@@ -78,12 +76,11 @@ bot.on('message', msg => {
 				var perm1 = msg.server.roles.get('name', 'Bot User');
 				var perm2 = msg.server.roles.get('name', 'Bot Moderator');
 				var perm3 = config.ownerId;
-				log.warn(perm1+perm2+perm3);
-				
+
 				userPermissionLevel = perm1 && bot.memberHasRole(msg.author, perm1) && userPermissionLevel < 1 ? 1 : userPermissionLevel;
 				userPermissionLevel = perm2 && bot.memberHasRole(msg.author, perm2) && userPermissionLevel < 2 ? 2 : userPermissionLevel;
 			}
-			userPermissionLevel = msg.author.id == config.ownerId ? 3 : userPermissionLevel;
+			userPermissionLevel = msg.author.id == perm3 ? 3 : userPermissionLevel;
 			
 			if(cData.permissionLevel <= userPermissionLevel) {
 				cData.handler(bot, msg, suffix);
@@ -92,7 +89,7 @@ bot.on('message', msg => {
 			else
 				bot.sendMessage(msg.channel, `**${username}**, you're not allowed to use \`${command}\``);
 		}
-		bot.deleteMessage(msg);
+		//bot.deleteMessage(msg);
 	} 
 });
 
