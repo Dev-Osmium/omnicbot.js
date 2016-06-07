@@ -13,7 +13,7 @@ const echo = new Command('Plays YouTube Video', '', 1, null, (bot, msg, suffix) 
         bot.reply("Aucun URL de vidéo spécifié");
     } else {
         let parts = suffix.split(" "),
-            channel = msg.server.channels.get(parts[0]);
+            channel = msg.server.channels.get("name", parts[0]);
         bot.sendMessage(msg, "Je vais tenter de jouer " + parts[1] + " sur " + channel);
         if (channel instanceof Discord.VoiceChannel) {
             bot.joinVoiceChannel(channel).then(connection => {
