@@ -11,7 +11,6 @@ const Util = {
     CONFIG: __dirname + "/runfiles/config.json"
 };
 
-
 module.exports = {
     Database: Database,
     Util: Util

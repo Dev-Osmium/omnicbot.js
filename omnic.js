@@ -14,7 +14,6 @@ const db           = require('./util/dbcheck.js');
 const commands = require('./commands/index.js').commands,
 	  aliases  = require('./commands/index.js').aliases;
 
-
 // get String Formatting from this (util.format)
 const util = require( "util" );
 const reload = require("require-reload");
@@ -24,10 +23,9 @@ var globaltimers = [];
 // Catch discord.js errors
 bot.on('error', e => { log.error(e); });
 
-
-
 bot.on("ready", () => {
 	log.info("Prêt à servir dans " + bot.channels.length + " canaux sur " + bot.servers.length + " serveur.");
+	/* disabled for now, though it's fun to think about. Permissions checked upon command execution)
 	for(let server of bot.servers) {
 		let adminMembers = server.usersWithRole(server.roles.get("name", config.ownerRole));
 		for(let admin of adminMembers) { 
@@ -37,7 +35,7 @@ bot.on("ready", () => {
 		for (let mod of modMembers) {
 			log.info(mod.username + " added to Mod list on " + server.name);
 		}
-	}
+	}*/
 });
 
 //when the bot disconnects
@@ -80,6 +78,7 @@ bot.on('message', msg => {
 				var perm1 = msg.server.roles.get('name', 'Bot User');
 				var perm2 = msg.server.roles.get('name', 'Bot Moderator');
 				var perm3 = config.ownerId;
+				log.warn(perm1+perm2+perm3);
 				
 				userPermissionLevel = perm1 && bot.memberHasRole(msg.author, perm1) && userPermissionLevel < 1 ? 1 : userPermissionLevel;
 				userPermissionLevel = perm2 && bot.memberHasRole(msg.author, perm2) && userPermissionLevel < 2 ? 2 : userPermissionLevel;
@@ -93,22 +92,23 @@ bot.on('message', msg => {
 			else
 				bot.sendMessage(msg.channel, `**${username}**, you're not allowed to use \`${command}\``);
 		}
+		bot.deleteMessage(msg);
 	} 
 });
 
-/*
+
 bot.on("serverNewMember", (server, user) => {
 	console.log("Nouvel Utilisateur! " + user.username);
-	var message = util.format(Settings.welcome.message, user.username);
-	var messageRecipient = (Settings.welcome.inPrivate ? user : server.channels.get("name", Settings.welcome.channel));
+	var message = util.format(config.welcome.message, user.username);
+	var messageRecipient = (config.welcome.inPrivate ? user : server.channels.get("name", config.welcome.channel));
 	bot.sendMessage(messageRecipient, message);
 	
-	var milestoneStep = Settings.milestone.step;
-	var milestoneMessage = Settings.milestone.message;
+	var milestoneStep = config.milestone.step;
+	var milestoneMessage = config.milestone.message;
 	if(server.members.length % milestoneStep == 0) {
 		bot.sendMessage(server.defaultChannel, util.format(milestoneMessage, server.members.length));
 	}
-});*/
+});
 
 bot.loginWithToken(config.discordToken);
 
