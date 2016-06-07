@@ -87,7 +87,7 @@ bot.on('message', msg => {
 				log.command(msg.server, (msg.channel.name || msg.channel.id), msg.author.username, command, suffix);
 			}
 			else
-				bot.sendMessage(msg.channel, `**${username}**, you're not allowed to use \`${command}\``);
+				bot.sendMessage(msg.channel, `**${username}**, vous n'êtes pas authorisé à utiliser la commande \`${command}\``);
 		}
 		//bot.deleteMessage(msg);
 	} 

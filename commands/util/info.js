@@ -8,7 +8,7 @@ const echo = new Command('Displays specific text messages.', '', 0, null, (bot, 
         bot.reply(msg, "Aide pour cette commande à venir");
     } else {
         if(config.info[suffix]) {
-        	bot.reply(msg, config.info[suffix]);
+        	bot.sendMessage(msg, config.info[suffix]);
         } else {
             bot.reply(msg, "Commande d'info introuvable.");
         }
