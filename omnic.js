@@ -76,6 +76,8 @@ bot.on('message', msg => {
 				var perm1 = msg.server.roles.get('name', 'Bot User');
 				var perm2 = msg.server.roles.get('name', 'Bot Moderator');
 				var perm3 = config.ownerId;
+				
+				log.warn(perm1 + " ; " + perm2 + " ; " + perm3);
 
 				userPermissionLevel = perm1 && bot.memberHasRole(msg.author, perm1) && userPermissionLevel < 1 ? 1 : userPermissionLevel;
 				userPermissionLevel = perm2 && bot.memberHasRole(msg.author, perm2) && userPermissionLevel < 2 ? 2 : userPermissionLevel;
