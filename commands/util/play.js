@@ -27,7 +27,8 @@ const echo = new Command('Plays YouTube Video', '', 1, null, (bot, msg, suffix) 
               });
             })
             .catch(err => {
-              console.log('Playback Error: ' + err);
+                bot.leaveVoiceChannel(channel);
+                console.log('Playback Error: ' + err);
             });
         } else {
             bot.sendMessage(msg, "Apparement le canal n'est pas vocal... ché pas quoi faire là, boss.");
