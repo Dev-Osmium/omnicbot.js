@@ -5,7 +5,7 @@ const   about   = require('./admin/about.js'),
         echo    = require('./util/echo.js'),
         info    = require('./util/info.js'),
         play    = require('./util/play.js'),
-        rename    = require('./util/rename.js'),
+        rename    = require('./admin/rename.js'),
         reload    = require('./admin/reload.js');
 
 
