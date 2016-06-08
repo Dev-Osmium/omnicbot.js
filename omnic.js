@@ -73,8 +73,8 @@ bot.on('message', msg => {
 			var userPermissionLevel = 0;
 			if(msg.server) {
 				var userRoles = msg.server.rolesOf(msg.author);
-				var perm1 = msg.server.roles.get('name', 'Bot User');
-				var perm2 = msg.server.roles.get('name', 'Bot Moderator');
+				var perm1 = msg.server.roles.get('name', 'Modérateur');
+				var perm2 = msg.server.roles.get('name', 'Administrateur');
 				var perm3 = config.ownerId;
 				
 				log.warn(perm1 + " ; " + perm2 + " ; " + perm3);
