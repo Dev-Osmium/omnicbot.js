@@ -7,31 +7,52 @@ const Constants = require('./../../constants.js');
 const Command   = require('./../Command.js');
 const config    = require(Constants.Util.CONFIG);
 
+function getparams(suffix, num, separator) { 
+	var params = [];
+	parts = suffix.split(separator);
+	for (i=0; i < num; i++) params[i] = parts[i];
+	param[num+1] = parts.split(num).join(" ");
+	return params;
+}
+
+
 const echo = new Command('Plays YouTube Video', '', 1, null, (bot, msg, suffix) => {
-    
     if(!suffix) {
         bot.reply("Aucun URL de vidéo spécifié");
     } else {
-        let parts = suffix.split(" "),
-            channel = msg.server.channels.get("name", parts[0]);
-        //bot.sendMessage(msg, "Je vais tenter de jouer " + parts[1] + " sur " + channel);
-        if (channel instanceof Discord.VoiceChannel) {
-            bot.joinVoiceChannel(channel).then(connection => {
-              let url = "https://www.youtube.com/watch?v=" + parts[1];
-              let stream = ytdl(url, { audioonly: true });
-              connection.playRawStream(stream)
-              .then(intent => {
-                  intent.on("end", () => {
-                      console.log("Playback ended");
+        var parts = getparams(suffix, 2, " ");
+        let url = false;
+        let stream = false;
+        
+        switch(parts[0]) {
+            case "yt":
+                url = "https://www.youtube.com/watch?v=" + parts[1];
+                stream = ytdl(url, { audioonly: true });
+                break;
+            case default: 
+                stream = false;
+                break;
+        }
+        
+        if(stream) {
+            channel = msg.server.channels.get("name", parts[2]);
+            if (channel instanceof Discord.VoiceChannel) {
+                bot.joinVoiceChannel(channel).then(connection => {
+                  connection.playRawStream(stream)
+                  .then(intent => {
+                      intent.on("end", () => {
+                          console.log("Playback ended");
+                          bot.leaveVoiceChannel(channel);
+                      });
                   });
-              });
-            })
-            .catch(err => {
-                bot.leaveVoiceChannel(channel);
-                console.log('Playback Error: ' + err);
-            });
-        } else {
-            bot.sendMessage(msg, "Apparement le canal n'est pas vocal... ché pas quoi faire là, boss.");
+                })
+                .catch(err => {
+                    bot.leaveVoiceChannel(channel);
+                    console.log('Playback Error: ' + err);
+                });
+            } else {
+                bot.sendMessage(msg, "Apparement le canal n'est pas vocal... ché pas quoi faire là, boss.");
+            }
         }
     }
 });
