@@ -14,10 +14,10 @@ const echo = new Command('Plays YouTube Video', '', 1, null, (bot, msg, suffix) 
     } else {
         let parts = suffix.split(" "),
             channel = msg.server.channels.get("name", parts[0]);
-        bot.sendMessage(msg, "Je vais tenter de jouer " + parts[1] + " sur " + channel);
+        //bot.sendMessage(msg, "Je vais tenter de jouer " + parts[1] + " sur " + channel);
         if (channel instanceof Discord.VoiceChannel) {
             bot.joinVoiceChannel(channel).then(connection => {
-              let url = parts[1];
+              let url = "https://www.youtube.com/watch?v=" + parts[1];
               let stream = ytdl(url, { audioonly: true });
               connection.playRawStream(stream)
               .then(intent => {
