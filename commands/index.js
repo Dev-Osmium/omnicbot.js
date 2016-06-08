@@ -5,12 +5,14 @@ const   about   = require('./admin/about.js'),
         echo    = require('./util/echo.js'),
         info    = require('./util/info.js'),
         play    = require('./util/play.js'),
+        rename    = require('./util/rename.js'),
         reload    = require('./admin/reload.js');
 
 
 exports.aliases = {
     "who"           : "about",
-    "youtube"       : "play"
+    "youtube"       : "play",
+    "nick"          : "rename"
 };
 
 exports.commands = { 
@@ -19,5 +21,6 @@ exports.commands = {
     "reload"        : reload,
     "info"          : info,
     "play"          : play,
+    "rename"          : rename,
     "timer"         : timer
 };
