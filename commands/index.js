@@ -2,6 +2,7 @@ const Constants = require('./../constants.js');
 
 const   about   = require('./admin/about.js'),
         timer   = require('./admin/timer.js'),
+        userlist   = require('./admin/userlist.js'),
         echo    = require('./util/echo.js'),
         info    = require('./util/info.js'),
         play    = require('./util/play.js'),
@@ -21,6 +22,7 @@ exports.commands = {
     "reload"        : reload,
     "info"          : info,
     "play"          : play,
-    "rename"          : rename,
+    "rename"        : rename,
+    "userlist"      : userlist,
     "timer"         : timer
 };

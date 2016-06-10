@@ -1,3 +1,5 @@
+"use strict"; 
+
 const Constants = require('./../../constants.js'); 
 
 const Command   = require('./../Command.js');

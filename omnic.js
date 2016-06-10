@@ -77,7 +77,7 @@ bot.on('message', msg => {
 				var perm2 = msg.server.roles.get('name', 'Administrateur');
 				var perm3 = config.ownerId;
 				
-				log.warn(perm1 + " ; " + perm2 + " ; " + perm3);
+				//log.warn(perm1 + " ; " + perm2 + " ; " + perm3);
 
 				userPermissionLevel = perm1 && bot.memberHasRole(msg.author, perm1) && userPermissionLevel < 1 ? 1 : userPermissionLevel;
 				userPermissionLevel = perm2 && bot.memberHasRole(msg.author, perm2) && userPermissionLevel < 2 ? 2 : userPermissionLevel;
@@ -95,9 +95,32 @@ bot.on('message', msg => {
 	} 
 });
 
+// Custom Code for streaming users! 
+/*bot.on("presence", (userold, usernew) => {
+	console.log("Presence Changed!");
+});*/
+
+bot.on('raw', (thing) => {
+  if(thing.t === "PRESENCE_UPDATE") { 
+	  	let server = bot.servers.get("id", thing.d.guild_id),
+	  		member = server.members.get("id", thing.d.user.id),
+	  		role = server.roles.get("name", "En Ondes");
+	  if(!role) { 
+	  	log.error(`Role was not found when attempting to upgrade Streamer user on ${server.name}`);
+	  	return;
+	  }
+  	if(thing.d.game && thing.d.game.type == 1 && thing.d.game.name.indexOf("Overwatch") > -1) {
+	  	bot.addMemberToRole(member, role);
+	  	log.info(`${member.name} has started streaming on ${thing.d.game.url}`);
+  	} else {
+  		bot.removeMemberFromRole(member, role);
+  	}
+  }
+});
+
 
 bot.on("serverNewMember", (server, user) => {
-	console.log("Nouvel Utilisateur! " + user.username);
+	log.info("Nouvel Utilisateur! " + user.username);
 	var message = util.format(config.welcome.message, user.username);
 	var messageRecipient = (config.welcome.inPrivate ? user : server.channels.get("name", config.welcome.channel));
 	bot.sendMessage(messageRecipient, message);
