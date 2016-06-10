@@ -100,18 +100,21 @@ bot.on('message', msg => {
 	console.log("Presence Changed!");
 });*/
 
-bot.on('raw', (thing) => {
-  if(thing.t === "PRESENCE_UPDATE") { 
-	  	let server = bot.servers.get("id", thing.d.guild_id),
-	  		member = server.members.get("id", thing.d.user.id),
+bot.on('raw', (event) => {
+  if(event.t === "PRESENCE_UPDATE") { 
+	  	let server = bot.servers.get("id", event.d.guild_id),
+	  		member = server.members.get("id", event.d.user.id),
 	  		role = server.roles.get("name", "En Ondes");
 	  if(!role) { 
 	  	log.error(`Role was not found when attempting to upgrade Streamer user on ${server.name}`);
 	  	return;
 	  }
-  	if(thing.d.game && thing.d.game.type == 1 && thing.d.game.name.indexOf("Overwatch") > -1) {
-	  	bot.addMemberToRole(member, role);
-	  	log.info(`${member.name} has started streaming on ${thing.d.game.url}`);
+  	if(event.d.game && event.d.game.type == 1 && event.d.game.name.indexOf("Overwatch") > -1) {
+	  	bot.addMemberToRole(member, role, (err) => {
+			if (err)
+				log.error(`Could not add Streamer to server role on ${server.name} because of:\n${err}`);
+		});
+	  	log.info(`${member.name} has started streaming on ${event.d.game.url}`);
   	} else {
   		bot.removeMemberFromRole(member, role);
   	}
