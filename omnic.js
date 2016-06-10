@@ -96,8 +96,31 @@ bot.on('message', msg => {
 });
 
 // Custom Code for streaming users! 
-/*bot.on("presence", (userold, usernew) => {
-	console.log("Presence Changed!");
+/*
+var streamingusers = [];
+bot.on("presence", (userold, usernew) => {
+	if(userold.game === usernew.game) return;
+	if(!usernew.game) return;
+
+	
+	if(usernew.game && usernew.game.type == 1 && usernew.game.name.indexOf("Overwatch") > -1) {
+		for(let server of bot.servers) {
+			let role = server.roles.get("name", "En Ondes");
+			if(role) {
+				bot.addMemberToRole(usernew, role, (err) => {
+					if (err)
+						log.error(`Could not add Streamer to server role on ${server.name} because of:\n${err}`);
+				});
+			}
+		}
+		streamingusers.push(usernew.id);
+	} else if (streamingusers.indexOf(usernew.id)) {
+		for(let server of bot.servers) {
+			let role = server.roles.get("name", "En Ondes");
+			bot.removeMemberFromRole(usernew, role);
+			streamingusers.splice(streamingusers.indexOf(usernew.id), 1);
+		}
+	}
 });*/
 
 bot.on('raw', (event) => {

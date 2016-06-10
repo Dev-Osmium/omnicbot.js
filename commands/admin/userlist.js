@@ -20,7 +20,7 @@ const userlist = new Command('Gets a filtered list of users with certain predefi
 		});
 		
 		if(parts[2] === "-l") {
-			bot.sendMessage(msg, "There have been " + results.length + " new users in the last " + interval + " " + period + ". Here they are: ");
+			bot.sendMessage(msg, `Il y a eu **${results.length}** nouveaux membres qui ont rejoint le serveur depuis **${interval} ${period}**:`);
 			let msgString = "";
 			for(let user of results) {
 				msgString += user.username + " ; ";
@@ -28,7 +28,7 @@ const userlist = new Command('Gets a filtered list of users with certain predefi
 
 			bot.sendMessage(msg, msgString);
 		} else {
-			bot.reply(msg, "There have been " + results.length + " new users in the last " + interval + " " + period + ". To see them all, append -l to your query.");
+			bot.reply(msg, `Il y a eu **${results.length}** nouveaux membres qui ont rejoint le serveur depuis **${interval} ${period}**. Pour les voir, ajoute -l à la fin de la commande.`);
 		}
 		
 	}
