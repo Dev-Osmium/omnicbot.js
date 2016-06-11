@@ -159,9 +159,16 @@ bot.on("serverNewMember", (server, user) => {
 	bot.sendMessage(messageRecipient, message);
 
 	newusers.add(user);
-	if(newusers.length >= 2) {
+	log.info(newusers.length + " new users in buffer");
+
+	if(newusers.length >= 5) {
+		var userlist = [];
+		for(let user of newusers) {
+			userlist.push(user.mention());
+			newusers.remove(user);
+		}
+		log.info(`Say welcome to our new users: ${userlist.join(", ")}`);
 		//bot.sendMessage(server.channels.get("name", "bot"), "Nouveaux Utilisateurs: (LISTE)");
-		log.info(newusers.length + " new users in buffer");
 	}
 
 	var milestoneStep = config.milestone.step;
