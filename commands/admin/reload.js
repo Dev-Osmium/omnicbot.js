@@ -1,4 +1,5 @@
 const Constants = require('./../../constants.js'); 
+const reqreload = require("require-reload");
 
 const Command   = require('./../Command.js');
 const config    = require(Constants.Util.CONFIG);

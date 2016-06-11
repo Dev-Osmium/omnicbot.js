@@ -2,6 +2,7 @@
 
 const Constants = require('./../../constants.js'); 
 const moment		= require('moment');
+moment.locale("fr");
 
 const Command   = require('./../Command.js');
 const config    = require(Constants.Util.CONFIG);
@@ -12,7 +13,11 @@ const userlist = new Command('Gets a filtered list of users with certain predefi
 		let parts = suffix.split(" "),
 			interval = parts[0],
 			period = parts[1],
-			backto = moment().subtract(interval, period);
+			backto = moment().locale("fr").subtract(interval, period);
+		
+		if(parts[2] === "-i") {
+			
+		}
 		
 		let results = msg.server.members.filter(function(member) {
 			var joinTime = msg.server.detailsOfUser(member).joinedAt;

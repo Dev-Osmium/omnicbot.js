@@ -16,7 +16,7 @@ const commands = require('./commands/index.js').commands,
 
 // get String Formatting from this (util.format)
 const util = require( "util" );
-const reload = require("require-reload");
+var newusers = new Discord.Cache();
 
 // Catch discord.js errors
 bot.on('error', e => { log.error(e); });
@@ -97,12 +97,18 @@ bot.on('message', msg => {
 
 // Custom Code for streaming users! 
 /*
+
+bot.on("presence", (o, n) => (n.game && n.game.name === "Overwatch" && n.game.url ? bot.addMemberToRole : o && o.game === "Overwatch" && o.game.url ? bot.removeRoleFromMember : () => {})(o, JSON.stringify(o.game) !== JSON.stringify(n.game) && "streamer role ID"));
+bot.on("presence", (o, n) => bot[n.game && n.game.name === "Overwatch" && n.game.url ? "addMemberToRole" : "removeMemberFromRole"](n, overwatchRole));
+
+
+bot.on("presence", (o, n) => bot[n.game && n.game.name === "Overwatch" && n.game.url ? "addMemberToRole" : "removeMemberFromRole"](n, bot.servers.find(s => s.members.get("id", n.id) && s.roles.get("name", overwatchServerRoleMap[s.id])).roles.get(overwatchServerRoleMap[s.id])));
+where overwatchServerRoleMap is a map where {"serverID": "roleID"}
+
 var streamingusers = [];
 bot.on("presence", (userold, usernew) => {
 	if(userold.game === usernew.game) return;
-	if(!usernew.game) return;
 
-	
 	if(usernew.game && usernew.game.type == 1 && usernew.game.name.indexOf("Overwatch") > -1) {
 		for(let server of bot.servers) {
 			let role = server.roles.get("name", "En Ondes");
@@ -147,10 +153,17 @@ bot.on('raw', (event) => {
 
 bot.on("serverNewMember", (server, user) => {
 	log.info("Nouvel Utilisateur! " + user.username);
+	
 	var message = util.format(config.welcome.message, user.username);
 	var messageRecipient = (config.welcome.inPrivate ? user : server.channels.get("name", config.welcome.channel));
 	bot.sendMessage(messageRecipient, message);
-	
+
+	newusers.add(user);
+	if(newusers.length >= 2) {
+		//bot.sendMessage(server.channels.get("name", "bot"), "Nouveaux Utilisateurs: (LISTE)");
+		log.info(newusers.length + " new users in buffer");
+	}
+
 	var milestoneStep = config.milestone.step;
 	var milestoneMessage = config.milestone.message;
 	if(server.members.length % milestoneStep == 0) {
