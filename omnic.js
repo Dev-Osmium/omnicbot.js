@@ -17,13 +17,19 @@ const commands = require('./commands/index.js').commands,
 // get String Formatting from this (util.format)
 const util = require( "util" );
 var newusers = new Discord.Cache();
+//var serverSettings = db.serverSettings();
 
 // Catch discord.js errors
 bot.on('error', e => { log.error(e); });
 
 bot.on("ready", () => {
 	log.info("Prêt à servir dans " + bot.channels.length + " canaux sur " + bot.servers.length + " serveur.");
-	/* disabled for now, though it's fun to think about. Permissions checked upon command execution)
+
+	/*for(let server of bot.servers) {
+		if (!serverSettings[server.id]) {
+			log.warn(`Server ${server.name} not setup!`);
+		}
+	}
 	for(let server of bot.servers) {
 		let adminMembers = server.usersWithRole(server.roles.get("name", config.ownerRole));
 		for(let admin of adminMembers) { 
@@ -161,14 +167,13 @@ bot.on("serverNewMember", (server, user) => {
 	newusers.add(user);
 	log.info(newusers.length + " new users in buffer");
 
-	if(newusers.length >= 5) {
+	if(newusers.length >= 10) {
 		var userlist = [];
 		for(let user of newusers) {
 			userlist.push(user.mention());
 			newusers.remove(user);
 		}
-		log.info(`Say welcome to our new users: ${userlist.join(", ")}`);
-		//bot.sendMessage(server.channels.get("name", "bot"), "Nouveaux Utilisateurs: (LISTE)");
+		bot.sendMessage(server.defaultChannel, `Souhaitez la bienvenue à nos plus récents membres!\n ${userlist.join(", ")}`);
 	}
 
 	var milestoneStep = config.milestone.step;
