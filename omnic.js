@@ -8,6 +8,11 @@ const Constants = require('./constants.js');
 const config = require(Constants.Util.CONFIG);
 const log = require(Constants.Util.LOGGER);
 
+// For permanent log instead of console: 
+var winston = require('winston');
+winston.add(winston.transports.File, { filename: 'runfiles/winston.log' });
+winston.remove(winston.transports.Console);
+
 // Database stuff
 const db           = require('./util/dbcheck.js');
 // Load all the commands + aliases
@@ -149,7 +154,7 @@ bot.on('raw', (event) => {
 			if (err)
 				log.error(`Could not add Streamer to server role on ${server.name} because of:\n${err}`);
 		});
-	  	log.info(`${member.name} has started streaming on ${event.d.game.url}`);
+	  	//log.info(`${member.name} has started streaming on ${event.d.game.url}`);
   	} else {
   		bot.removeMemberFromRole(member, role);
   	}
@@ -165,16 +170,22 @@ bot.on("serverNewMember", (server, user) => {
 	bot.sendMessage(messageRecipient, message);
 
 	newusers.add(user);
-	log.info(newusers.length + " new users in buffer");
+	//log.info(newusers.length + " new users in buffer");
+
 
 	if(newusers.length >= 10) {
 		var userlist = [];
-		for(let user of newusers) {
+/*
+		for(let i = 0; newusers.length; i++) {
 			userlist.push(user.mention());
 			newusers.remove(user);
 		}
+*/
+		for(let user of userlist)	userlist.push(user.mention());
+		for(let user of userlist) userlist.remove(user);
 		bot.sendMessage(server.defaultChannel, `Souhaitez la bienvenue à nos plus récents membres!\n ${userlist.join(", ")}`);
 	}
+
 
 	var milestoneStep = config.milestone.step;
 	var milestoneMessage = config.milestone.message;
