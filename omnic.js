@@ -29,31 +29,12 @@ bot.on('error', e => { log.error(e); });
 
 bot.on("ready", () => {
 	log.info("Prêt à servir dans " + bot.channels.length + " canaux sur " + bot.servers.length + " serveur.");
-
-	/*for(let server of bot.servers) {
-		if (!serverSettings[server.id]) {
-			log.warn(`Server ${server.name} not setup!`);
-		}
-	}
-	for(let server of bot.servers) {
-		let adminMembers = server.usersWithRole(server.roles.get("name", config.ownerRole));
-		for(let admin of adminMembers) { 
-			log.info(admin.username + " added to Admin list on " + server.name);
-		}
-		let modMembers = server.usersWithRole(server.roles.get("name", config.modRole));
-		for (let mod of modMembers) {
-			log.info(mod.username + " added to Mod list on " + server.name);
-		}
-	}*/
 });
 
-//when the bot disconnects
 bot.on("disconnected", () => {
-	//alert the console
 	log.warn('Disconnected'); 
 });
 
-/* Message handling */
 bot.on('message', msg => {
 	//Ignore if msg is from self or bot account
 	if(msg.author.id == bot.user.id || msg.author.bot) return;
@@ -106,39 +87,6 @@ bot.on('message', msg => {
 	} 
 });
 
-// Custom Code for streaming users! 
-/*
-
-bot.on("presence", (o, n) => (n.game && n.game.name === "Overwatch" && n.game.url ? bot.addMemberToRole : o && o.game === "Overwatch" && o.game.url ? bot.removeRoleFromMember : () => {})(o, JSON.stringify(o.game) !== JSON.stringify(n.game) && "streamer role ID"));
-bot.on("presence", (o, n) => bot[n.game && n.game.name === "Overwatch" && n.game.url ? "addMemberToRole" : "removeMemberFromRole"](n, overwatchRole));
-
-
-bot.on("presence", (o, n) => bot[n.game && n.game.name === "Overwatch" && n.game.url ? "addMemberToRole" : "removeMemberFromRole"](n, bot.servers.find(s => s.members.get("id", n.id) && s.roles.get("name", overwatchServerRoleMap[s.id])).roles.get(overwatchServerRoleMap[s.id])));
-where overwatchServerRoleMap is a map where {"serverID": "roleID"}
-
-var streamingusers = [];
-bot.on("presence", (userold, usernew) => {
-	if(userold.game === usernew.game) return;
-
-	if(usernew.game && usernew.game.type == 1 && usernew.game.name.indexOf("Overwatch") > -1) {
-		for(let server of bot.servers) {
-			let role = server.roles.get("name", "En Ondes");
-			if(role) {
-				bot.addMemberToRole(usernew, role, (err) => {
-					if (err)
-						log.error(`Could not add Streamer to server role on ${server.name} because of:\n${err}`);
-				});
-			}
-		}
-		streamingusers.push(usernew.id);
-	} else if (streamingusers.indexOf(usernew.id)) {
-		for(let server of bot.servers) {
-			let role = server.roles.get("name", "En Ondes");
-			bot.removeMemberFromRole(usernew, role);
-			streamingusers.splice(streamingusers.indexOf(usernew.id), 1);
-		}
-	}
-});*/
 
 bot.on('raw', (event) => {
   if(event.t === "PRESENCE_UPDATE") { 
@@ -170,22 +118,10 @@ bot.on("serverNewMember", (server, user) => {
 	bot.sendMessage(messageRecipient, message);
 
 	newusers.add(user);
-	//log.info(newusers.length + " new users in buffer");
-
-
 	if(newusers.length >= 10) {
-		var userlist = [];
-/*
-		for(let i = 0; newusers.length; i++) {
-			userlist.push(user.mention());
-			newusers.remove(user);
-		}
-*/
-		for(let user of userlist)	userlist.push(user.mention());
-		for(let user of userlist) userlist.remove(user);
-		bot.sendMessage(server.defaultChannel, `Souhaitez la bienvenue à nos plus récents membres!\n ${userlist.join(", ")}`);
+		bot.sendMessage(server.defaultChannel, `Souhaitez la bienvenue à nos plus récents membres!\n ${newusers.join(", ")}`);
+		for(let user of newusers) newusers.remove(user);
 	}
-
 
 	var milestoneStep = config.milestone.step;
 	var milestoneMessage = config.milestone.message;
