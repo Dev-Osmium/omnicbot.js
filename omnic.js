@@ -26,19 +26,6 @@ var newusers = new Discord.Cache();
 bot.on('error', e => { log.error(e); });
 
 bot.on("ready", () => {
-
-	// db.init({dir:'runfiles/db'}).then(()=> {
-	// 	var servers = db.getItem('servers', []);
-	// 	for(let server of bot.servers) {
-	// 		if(!servers[server.id]) {
-	// 			servers[server.id] = [];
-	// 			servers[server.id].name = "This is a test";
-	// 			db.setItem('servers')
-	// 			log.info(`Initialised ${server.name} in DB`);
-	// 		}
-	// 	}
-	// });
-
 	log.info("Prêt à servir dans " + bot.channels.length + " canaux sur " + bot.servers.length + " serveur.");
 });
 
@@ -72,7 +59,6 @@ bot.on('message', msg => {
 
 			var userPermissionLevel = 0;
 			if(msg.server) {
-				var userRoles = msg.server.rolesOf(msg.author);
 				var perm1 = msg.server.roles.get('name', 'Modérateur');
 				var perm2 = msg.server.roles.get('name', 'Administrateur');
 				var perm3 = config.ownerId;

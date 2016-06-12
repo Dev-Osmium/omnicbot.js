@@ -5,7 +5,7 @@ const config    = require(Constants.Util.CONFIG);
 
 const echo = new Command('Displays specific text messages.', '', 0, null, (bot, msg, suffix) => {
     if(!suffix) {
-        bot.reply(msg, "Aide pour cette commande à venir");
+        bot.reply(msg, `${config.prefix}info ${Object.keys(config.info).join()}`);
     } else {
         if(config.info[suffix]) {
         	bot.sendMessage(msg, config.info[suffix]);
