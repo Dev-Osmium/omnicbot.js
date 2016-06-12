@@ -2,6 +2,8 @@
 
 const Discord = require('discord.js'),
 	  bot     = new Discord.Client({forceFetchUsers: true, autoReconnect: true, guildCreateTimeout: 2000});
+const winston = require('winston');
+const util = require( "util" );
 
 // Get DB and logger paths
 const Constants = require('./constants.js');
@@ -9,25 +11,34 @@ const config = require(Constants.Util.CONFIG);
 const log = require(Constants.Util.LOGGER);
 
 // For permanent log instead of console: 
-var winston = require('winston');
 winston.add(winston.transports.File, { filename: 'runfiles/winston.log' });
 winston.remove(winston.transports.Console);
 
-// Database stuff
-const db           = require('./util/dbcheck.js');
+
+
 // Load all the commands + aliases
 const commands = require('./commands/index.js').commands,
 	  aliases  = require('./commands/index.js').aliases;
 
-// get String Formatting from this (util.format)
-const util = require( "util" );
 var newusers = new Discord.Cache();
-//var serverSettings = db.serverSettings();
 
 // Catch discord.js errors
 bot.on('error', e => { log.error(e); });
 
 bot.on("ready", () => {
+
+	// db.init({dir:'runfiles/db'}).then(()=> {
+	// 	var servers = db.getItem('servers', []);
+	// 	for(let server of bot.servers) {
+	// 		if(!servers[server.id]) {
+	// 			servers[server.id] = [];
+	// 			servers[server.id].name = "This is a test";
+	// 			db.setItem('servers')
+	// 			log.info(`Initialised ${server.name} in DB`);
+	// 		}
+	// 	}
+	// });
+
 	log.info("Prêt à servir dans " + bot.channels.length + " canaux sur " + bot.servers.length + " serveur.");
 });
 
@@ -39,9 +50,6 @@ bot.on('message', msg => {
 	//Ignore if msg is from self or bot account
 	if(msg.author.id == bot.user.id || msg.author.bot) return;
 	
-	if(msg.server)
-		db.createServer(msg.server);
-		
 	if(msg.content.startsWith(config.prefix)) {
 		var command  = msg.content.substring(config.prefix.length).split(" ")[0].toLowerCase();
 		var suffix   = msg.content.substring(command.length + 2).trim();
@@ -83,7 +91,6 @@ bot.on('message', msg => {
 			else
 				bot.sendMessage(msg.channel, `**${username}**, vous n'êtes pas authorisé à utiliser la commande \`${command}\``);
 		}
-		//bot.deleteMessage(msg);
 	} 
 });
 
@@ -120,7 +127,7 @@ bot.on("serverNewMember", (server, user) => {
 	newusers.add(user);
 	if(newusers.length >= 10) {
 		bot.sendMessage(server.defaultChannel, `Souhaitez la bienvenue à nos plus récents membres!\n ${newusers.join(", ")}`);
-		for(let user of newusers) newusers.remove(user);
+		newusers = new Discord.Cache();
 	}
 
 	var milestoneStep = config.milestone.step;

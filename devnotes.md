@@ -20,6 +20,16 @@ function getparams(suffix, num, separator) {
 }
 
 
+if(newusers.length >= 10) {
+    var userlist = [];
+    var i = newusers.length;
+
+    while(i--) {
+        userlist.push(newusers[i].mention());
+        newusers.remove(newusers[i]);
+    }
+    bot.sendMessage(server.defaultChannel, `Souhaitez la bienvenue à nos plus récents membres!\n ${userlist.join(", ")}`);
+}
 
 
 
