@@ -7,7 +7,7 @@ moment.locale("fr");
 const Command   = require('./../Command.js');
 const config    = require(Constants.Util.CONFIG);
 
-const userlist = new Command('Gets a filtered list of users with certain predefined filters.', '', 2, null, (bot, msg, suffix) => {
+const userlist = new Command('Gets a filtered list of users with certain predefined filters.', '', 1, null, (bot, msg, suffix) => {
 	// .userlist 24 hours
 	if(suffix) {
 		let parts = suffix.split(" "),

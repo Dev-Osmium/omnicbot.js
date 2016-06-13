@@ -5,10 +5,16 @@ const Discord = require('discord.js'),
 const winston = require('winston');
 const util = require( "util" );
 
+
 // Get DB and logger paths
 const Constants = require('./constants.js');
 const config = require(Constants.Util.CONFIG);
 const log = require(Constants.Util.LOGGER);
+
+
+var knex = require('knex')(config.pgconf);
+
+var bookshelf = require('bookshelf')(knex);
 
 // For permanent log instead of console: 
 winston.add(winston.transports.File, { filename: 'runfiles/winston.log' });
@@ -111,7 +117,7 @@ bot.on("serverNewMember", (server, user) => {
 	bot.sendMessage(messageRecipient, message);
 
 	newusers.add(user);
-	if(newusers.length >= 10) {
+	if(newusers.length >= 25) {
 		bot.sendMessage(server.defaultChannel, `Souhaitez la bienvenue à nos plus récents membres!\n ${newusers.join(", ")}`);
 		newusers = new Discord.Cache();
 	}
@@ -121,6 +127,11 @@ bot.on("serverNewMember", (server, user) => {
 	if(server.members.length % milestoneStep == 0) {
 		bot.sendMessage(server.defaultChannel, util.format(milestoneMessage, server.members.length));
 	}
+});
+
+bot.on("serverMemberRemoved", (server, user) => {
+	newusers.remove(user);
+	log.info(`${user.username} (${server.detailsOfUser(user).nick}) has left the server`);
 });
 
 bot.loginWithToken(config.discordToken);

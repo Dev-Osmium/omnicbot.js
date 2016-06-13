@@ -6,6 +6,7 @@ const   about   = require('./admin/about.js'),
         echo    = require('./util/echo.js'),
         info    = require('./util/info.js'),
         play    = require('./util/play.js'),
+        bnet    = require('./util/bnet.js'),
         rename    = require('./admin/rename.js'),
         reload    = require('./admin/reload.js');
 
@@ -22,6 +23,7 @@ exports.commands = {
     "reload"        : reload,
     "info"          : info,
     "play"          : play,
+    "bnet"          : bnet,
     "rename"        : rename,
     "userlist"      : userlist,
     "timer"         : timer
