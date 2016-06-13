@@ -20,7 +20,7 @@ const bnet = new Command('Retrieves Battle.net Info + MasterOverwatch Profile Li
         let user = msg.mentions.length === 1 ? msg.mentions[0] : msg.server.members.get(member => msg.server.detailsOfUser(member).nick === suffix),
             bnetTag = null,
             nickname = msg.server.detailsOfUser(user).nick;
-        if(!nickname) nickname = user.username;
+        if(!nickname || !user) nickname = user.username;
         if(nickname && nickname.indexOf("#") > -1) {
             bnetTag = nickname;
         } else {
