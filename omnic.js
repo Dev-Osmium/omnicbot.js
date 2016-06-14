@@ -11,10 +11,10 @@ const Constants = require('./constants.js');
 const config = require(Constants.Util.CONFIG);
 const log = require(Constants.Util.LOGGER);
 
-/*
-var knex = require('knex')(config.pgconf);
-var bookshelf = require('bookshelf')(knex);
-*/
+
+const knex = require('knex')(config.pgconf);
+const bookshelf = require('bookshelf')(knex);
+
 
 // For permanent log instead of console: 
 winston.add(winston.transports.File, { filename: 'runfiles/winston.log' });

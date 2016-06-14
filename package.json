@@ -12,6 +12,7 @@
     "knex": "^0.11.5",
     "moment": "^2.13.0",
     "node-uuid": "^1.4.7",
+    "performance-now": "^0.2.0",
     "pg": "^5.1.0",
     "require-reload": "^0.2.2",
     "save": "^2.3.0",
