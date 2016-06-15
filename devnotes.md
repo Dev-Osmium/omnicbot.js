@@ -8,7 +8,9 @@
 // save JSON string "pretty", \t is tab indentation
 JSON.stringify(toStringify, null, "\t")
 
-
+sheet.getRows(, function( err, rows ){
+      console.log('Read '+rows.length+' rows');
+    });
 
 
 function getparams(suffix, num, separator) { 

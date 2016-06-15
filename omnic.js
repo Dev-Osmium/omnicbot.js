@@ -5,38 +5,59 @@ const Discord = require('discord.js'),
 const winston = require('winston');
 const util = require( "util" );
 
-
 // Get DB and logger paths
 const Constants = require('./constants.js');
 const config = require(Constants.Util.CONFIG);
 const log = require(Constants.Util.LOGGER);
-
-
+const schedule = require("node-schedule");
 const knex = require('knex')(config.pgconf);
-const bookshelf = require('bookshelf')(knex);
-
 
 // For permanent log instead of console: 
 winston.add(winston.transports.File, { filename: 'runfiles/winston.log' });
 winston.remove(winston.transports.Console);
 
-
-
 // Load all the commands + aliases
 const commands = require('./commands/index.js').commands,
 	  aliases  = require('./commands/index.js').aliases;
 
+// Various variables used within this file, global to it.
 var newusers = new Discord.Cache();
+GLOBAL.top_users_online = 0;
 
 // Catch discord.js errors
 bot.on('error', e => { log.error(e); });
 
 bot.on("ready", () => {
 	log.info("Prêt à servir dans " + bot.channels.length + " canaux sur " + bot.servers.length + " serveur.");
+	  knex.select("max_online").table('stats').orderBy("max_online", "desc").limit(1)
+    .then( (rows) => {
+      GLOBAL.top_users_online = rows[0].max_online;
+    });
 });
 
-bot.on("disconnected", () => {
-	log.warn('Disconnected'); 
+bot.once('ready', () => {
+	var rule = new schedule.RecurrenceRule();
+	//rule.minute = [0, 15, 30, 45]; // every 15 minutes of the hour.
+	rule.minute = [new schedule.Range(0, 55,5)]; // every 5 minutes!
+	var stats_scheduler = schedule.scheduleJob(rule, function(){
+	  let query = {"server_id": "185776869398806529", "max_users": 0, "playing_ow": 0, "max_online": 0, "partial_groups": 0, "full_groups": 0};
+	  let server = bot.servers.get("id", "185776869398806529");
+		query.max_users = server.members.length;
+		query.playing_ow = server.members.filter(m=> m.game&&m.game.name==="Overwatch").length;
+		let max_online = server.members.filter(m => m.status !== "offline").length;
+		query.max_online = max_online;
+		if(max_online > GLOBAL.top_users_online) GLOBAL.top_users_online = max_online;
+		let voiceChans = server.channels.filter(c => c instanceof Discord.VoiceChannel&&c.name!="Absent - AFK");
+		query.full_groups = voiceChans.filter(c=>c.members.length > 5).length;
+		query.partial_groups = voiceChans.filter(c=>c.members.length<6&&c.members.length>0).length;
+		knex.insert(query, 'id').into('stats')
+		.catch( (error) => {
+			log.error(error);
+		})
+		.then( (id) => {
+		  log.info("Stats Recorded: " + id + ", query: " + JSON.stringify(query));	
+		});
+	});
 });
 
 bot.on('message', msg => {
@@ -132,6 +153,10 @@ bot.on("serverNewMember", (server, user) => {
 bot.on("serverMemberRemoved", (server, user) => {
 	newusers.remove(user);
 	log.info(`${user.username} (${server.detailsOfUser(user).nick}) has left the server`);
+});
+
+bot.on("disconnected", () => {
+	log.warn('Disconnected'); 
 });
 
 bot.loginWithToken(config.discordToken);
