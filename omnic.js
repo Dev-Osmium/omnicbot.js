@@ -1,9 +1,11 @@
 "use strict"; 
 
 const Discord = require('discord.js'),
-	  bot     = new Discord.Client({forceFetchUsers: true, autoReconnect: true, guildCreateTimeout: 2000});
+	  bot     = new Discord.Client({forceFetchUsers: true, autoReconnect: true, guildCreateTimeout: 0});
 const winston = require('winston');
 const util = require( "util" );
+var request = require("request");
+
 
 // Get DB and logger paths
 const Constants = require('./constants.js');
@@ -22,42 +24,68 @@ const commands = require('./commands/index.js').commands,
 
 // Various variables used within this file, global to it.
 var newusers = new Discord.Cache();
-GLOBAL.top_users_online = 0;
+global.top_users_online = [];
 
-// Catch discord.js errors
-bot.on('error', e => { log.error(e); });
+
+var timers = require("./util/timers.js")(bot);
+timers.test();
 
 bot.on("ready", () => {
 	log.info("Prêt à servir dans " + bot.channels.length + " canaux sur " + bot.servers.length + " serveur.");
-	  knex.select("max_online").table('stats').orderBy("max_online", "desc").limit(1)
-    .then( (rows) => {
-      GLOBAL.top_users_online = rows[0].max_online;
-    });
+		for(let server in bot.servers) {
+		  knex.select("max_online").table('stats').orderBy("max_online", "desc").limit(1)
+	    .then( (rows) => {
+	      global.top_users_online = rows[0].max_online;
+	    });
+	  }
+
+});
+
+// Catch discord.js errors
+bot.on('error', e => { log.error(e); });
+bot.on('warn', e => { log.warn(e); });
+bot.on('debug', e => { log.info(e); });
+
+
+bot.on("serverCreated", (server) => {
+	console.log("Joined " + server.name);
 });
 
 bot.once('ready', () => {
 	var rule = new schedule.RecurrenceRule();
-	//rule.minute = [0, 15, 30, 45]; // every 15 minutes of the hour.
-	rule.minute = [new schedule.Range(0, 55,5)]; // every 5 minutes!
-	var stats_scheduler = schedule.scheduleJob(rule, function(){
-	  let query = {"server_id": "185776869398806529", "max_users": 0, "playing_ow": 0, "max_online": 0, "partial_groups": 0, "full_groups": 0};
-	  let server = bot.servers.get("id", "185776869398806529");
-		query.max_users = server.members.length;
-		query.playing_ow = server.members.filter(m=> m.game&&m.game.name==="Overwatch").length;
-		let max_online = server.members.filter(m => m.status !== "offline").length;
-		query.max_online = max_online;
-		if(max_online > GLOBAL.top_users_online) GLOBAL.top_users_online = max_online;
-		let voiceChans = server.channels.filter(c => c instanceof Discord.VoiceChannel&&c.name!="Absent - AFK");
-		query.full_groups = voiceChans.filter(c=>c.members.length > 5).length;
-		query.partial_groups = voiceChans.filter(c=>c.members.length<6&&c.members.length>0).length;
-		knex.insert(query, 'id').into('stats')
-		.catch( (error) => {
-			log.error(error);
-		})
-		.then( (id) => {
-		  log.info("Stats Recorded: " + id + ", query: " + JSON.stringify(query));	
+	rule.minute = [0, 15, 30, 45]; // every 15 minutes of the hour.
+	//rule.minute = [new schedule.Range(0, 55,5)]; // every 5 minutes!
+	for(var server of bot.servers) {
+		console.log("Starting logging on " + server.name);
+		var stats_scheduler = schedule.scheduleJob(rule, () =>{
+		  let query = {"server_id": server.id, "max_users": 0, "playing_ow": 0, "max_online": 0, "partial_groups": 0, "full_groups": 0};
+			query.max_users = server.members.length;
+			query.playing_ow = server.members.filter(m=> m.game&&m.game.name==="Overwatch").length;
+			let max_online = server.members.filter(m => m.status !== "offline").length;
+			query.max_online = max_online;
+			if(max_online > GLOBAL.top_users_online) GLOBAL.top_users_online = max_online;
+			let voiceChans = server.channels.filter(c => c instanceof Discord.VoiceChannel&&c.name!="Absent - AFK");
+			query.full_groups = voiceChans.filter(c=>c.members.length > 5).length;
+			query.partial_groups = voiceChans.filter(c=>c.members.length<6&&c.members.length>0).length;
+			knex.insert(query, 'id').into('stats')
+			.catch( (error) => {
+				log.error(error);
+			})
+			.then( (id) => {
+			  log.info("Stats Recorded: " + id + ", query: " + JSON.stringify(query));	
+			});
 		});
-	});
+	  /*knex.select().table('new_members')
+    .then( (rows) => {
+    	for(let row of rows) {
+    		bot.members.get("id", row["user_id"], (err, u) => {
+    			if(!err) newusers.add(u);
+    		});
+    		
+    	}
+    });*/
+		
+	}
 });
 
 bot.on('message', msg => {
@@ -136,7 +164,7 @@ bot.on("serverNewMember", (server, user) => {
 	var message = util.format(config.welcome.message, user.username);
 	var messageRecipient = (config.welcome.inPrivate ? user : server.channels.get("name", config.welcome.channel));
 	bot.sendMessage(messageRecipient, message);
-
+  user.server = server.id;
 	newusers.add(user);
 	if(newusers.length >= 25) {
 		bot.sendMessage(server.defaultChannel, `Souhaitez la bienvenue à nos plus récents membres!\n ${newusers.join(", ")}`);

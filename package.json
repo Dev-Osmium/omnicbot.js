@@ -15,6 +15,7 @@
     "node-uuid": "^1.4.7",
     "performance-now": "^0.2.0",
     "pg": "^5.1.0",
+    "request": "^2.72.0",
     "require-reload": "^0.2.2",
     "save": "^2.3.0",
     "winston": "^2.2.0",
