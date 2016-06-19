@@ -61,8 +61,9 @@ const tag = new Command('Displays specific text messages.', '', 0, null, (bot, m
     let myTag = tags.filter(t => (t.tag ===tagname&&t.server===serverid))[0];
     if(!myTag) {
       bot.reply(msg, `Le tag ${tagname} n'a pas été trouvé. Faire \`.info\` pour une liste de tags.`);
+    } else {
+      bot.sendMessage(msg, "" + myTag.description);
     }
-    bot.sendMessage(msg, "" + myTag.description);
   }
 });
 
