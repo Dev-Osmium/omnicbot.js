@@ -41,6 +41,7 @@ const tag = new Command('Displays specific text messages.', '', 0, null, (bot, m
       console.log(`Ajout du tag ${tagname} par ${msg.author.name}\n${contents}`);
       query.id = msg.id;
       tags.add(query);
+      bot.reply(msg, `Le tag ${tagname} a été ajouté.`);
 		});
   } else
   
@@ -52,14 +53,16 @@ const tag = new Command('Displays specific text messages.', '', 0, null, (bot, m
         knex('tags').where('id', rows[0].id).del();
         let delTag = tags.filter(t => t.tag ===tagname&&t.server===serverid);
         tags.remove(delTag);
+        bot.reply(msg, `Le tag ${tagname} a été supprimé. Beuh-Bye!.`);
     });
   } else {
     let tagname  = params[0],
         serverid = msg.server.id;
     let myTag = tags.filter(t => (t.tag ===tagname&&t.server===serverid))[0];
+    if(!myTag) {
+      bot.reply(msg, `Le tag ${tagname} n'a pas été trouvé. Faire \`.info\` pour une liste de tags.`);
+    }
     bot.sendMessage(msg, "" + myTag.description);
-    console.log(JSON.stringify(myTag));
-
   }
 });
 
