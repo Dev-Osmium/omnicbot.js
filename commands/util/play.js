@@ -11,10 +11,9 @@ function getparams(suffix, num, separator) {
 	let params = [];
 	let parts = suffix.split(separator);
 	for (let i=0; i < num; i++) params[i] = parts[i];
-	params[num+1] = suffix.split(num).join(" ");
+	params[num] = parts.slice(num).join(" ");
 	return params;
 }
-
 
 const echo = new Command('Plays YouTube Video', '', 1, null, (bot, msg, suffix) => {
   if(!suffix) {
