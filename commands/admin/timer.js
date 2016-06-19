@@ -15,7 +15,7 @@ function getparams(suffix, num, separator) {
 	return params;
 }
 
-const timer = new Command('Generates a timed messages. Usage: `.timer add Name 0 Channel The Messsage` to add (change 0 to number of seconds). `.timer remove Name` to remove it. ', '', 2, null, (bot, msg, suffix) => {
+const timer = new Command('Generates a timed messages. Usage: `.timer add Name 0 Channel The Messsage` to add (change 0 to number of seconds). `.timer remove Name Channel` to remove it. ', '', 2, null, (bot, msg, suffix) => {
     //let params = suffix.split(" ");
     let params = getparams(suffix, 4, " ");
     //console.log(`Timer command: ${params[0]}`); // timer ${params[1]}
@@ -30,6 +30,8 @@ const timer = new Command('Generates a timed messages. Usage: `.timer add Name 0
         if( timers.remove(params[1], msg.server.channels.get("name", params[3]).id)) {
             bot.reply(msg, "Timer " + params[1] + " a été supprimé.");
         }
+    } else {
+        bot.reply(msg, `Command erronée ou pas le bon nombre de paramètres`);
     }
 
 /*    let parts = suffix.split(" "),

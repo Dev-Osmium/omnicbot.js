@@ -26,10 +26,6 @@ const commands = require('./commands/index.js').commands,
 var newusers = new Discord.Cache();
 global.top_users_online = [];
 
-
-var timers = require("./util/timers.js")(bot);
-timers.test();
-
 bot.on("ready", () => {
 	log.info("Prêt à servir dans " + bot.channels.length + " canaux sur " + bot.servers.length + " serveur.");
 		for(let server in bot.servers) {

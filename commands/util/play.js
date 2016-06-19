@@ -21,12 +21,16 @@ const echo = new Command('Plays YouTube Video', '', 1, null, (bot, msg, suffix) 
     bot.reply("Aucun URL de vidéo spécifié");
   } else {
     var parts = getparams(suffix, 2, " ");
-    let url = false;
-    let stream = false;
+    let id = parts[1],
+        channel = parts[2],
+        url = false,
+        stream = false;
+    
+    console.log(`ID: ${id} will play in ${channel}`);
     
     switch(parts[0]) {
       case "yt":
-        url = "https://www.youtube.com/watch?v=" + parts[1];
+        url = "https://www.youtube.com/watch?v=" + id;
         stream = ytdl(url, { audioonly: true });
         break;
       default: 
@@ -35,7 +39,7 @@ const echo = new Command('Plays YouTube Video', '', 1, null, (bot, msg, suffix) 
     }
     
     if(stream) {
-      let channel = msg.server.channels.get("name", parts[2]);
+      let channel = msg.server.channels.get("name", channel);
       if (channel instanceof Discord.VoiceChannel) {
         bot.joinVoiceChannel(channel).then(connection => {
           connection.playRawStream(stream)
