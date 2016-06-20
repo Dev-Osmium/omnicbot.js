@@ -1,7 +1,26 @@
 const moment = require('moment'),
       chalk  = require('chalk'),
       clk    = new chalk.constructor({enabled: true});
-      
+
+var http = require("http");
+var express = require("express");
+var logger = require("winston");
+var winstonWS = require("winston-websocket");
+
+//configure express
+var app = express()
+  .use(express.static("."));
+
+//create http server
+var server = http.createServer(app);
+
+//register websocet transport
+logger.add( winstonWS.WSTransport, { wsoptions: { server: server, path: './../logs' } });
+
+//start server
+server.listen(process.env.PORT, process.env.IP);
+console.log("Server is listening on port 3000");
+
 // Define the colors
 var cyan = clk.bold.cyan,
     green   = clk.bold.green,
@@ -17,28 +36,29 @@ var date = () => {
 
 module.exports = {
     info: (message) => {
-        console.log(`${date()} ${green(message)}`);
+        logger.info(`${date()} ${green(message)}`);
     },
     command: (server, channel, username, command, suffix) => {
         server = server || "PM";
-        console.log(`${date()} ${cyan('[' + server + ']' + '(#' + channel + ')')} ${green(username)} -> ${magenta(command)} ${suffix}\n`);
+        logger.info(`${date()} ${cyan('[' + server + ']' + '(#' + channel + ')')} ${green(username)} -> ${magenta(command)} ${suffix}\n`);
     },
     error: (errorMessage) => {
-        console.log(`${date()} ${error(errorMessage)}`);
+        logger.error(`${date()} ${error(errorMessage)}`);
     },
     warn: (warnMessage) => {
-        console.log(`${date()} ${warn(warnMessage)}`);
+        logger.warn(`${date()} ${warn(warnMessage)}`);
     },
     ban: (user, server) => {
-        console.log(`${date()} ${red(user)} was just banned from ${cyan('[' + server + ']')}`);
+        logger.info(`${date()} ${red(user)} was just banned from ${cyan('[' + server + ']')}`);
     },
     unban: (user, server) => {
-        console.log(`${date()} ${green(user)} was just unbanned from ${cyan('[' + server + ']')}`);
+        logger.info(`${date()} ${green(user)} was just unbanned from ${cyan('[' + server + ']')}`);
     },
     join: (server) => {
-        console.log(`${date()} Joined ${cyan('[' + server + ']')}`);
+        logger.info(`${date()} Joined ${cyan('[' + server + ']')}`);
     },
     leave: (server) => {
-        console.log(`${date()} Left ${cyan('[' + server + ']')}`);
+        logger.info(`${date()} Left ${cyan('[' + server + ']')}`);
     }
 };
+

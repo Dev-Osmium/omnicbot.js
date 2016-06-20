@@ -18,16 +18,21 @@ knex.select().table('tags')
 	console.log(`Loaded a total of ${rows.length} tags from the database`);
 });
 
-const tag = new Command('Displays specific text messages.', '', 0, null, (bot, msg, suffix) => {
+const tag = new Command('Displays specific text messages.', '', 0, null, (bot, msg, suffix, perm) => {
+  console.log(`User permission level is: ${perm}`);
   if(!suffix) {
     let servertags = tags.filter(t => t.server === msg.server.id);
-    bot.reply(msg, `Utilisez \`!info nomDuTag\` pour appeler un des tag suivants.\nTags disponibles: ${servertags.map(t=>t.tag).join(", ")}`);
+    bot.reply(msg, `Utilisez \`.tag nomDuTag\` pour appeler un des tag suivants.\nTags disponibles: ${servertags.map(t=>t.tag).join(", ")}`);
     return;
   }
   
   let params = suffix.split(" ");
   
   if(params[0] === "add"){
+    if(perm <= 0) {
+      bot.reply(msg, "Commande non authorisée: .tag add");
+      return;
+    }
     let tagname  = params[1],
         contents = params.slice(2).join(" "),
         serverid = msg.server.id,
@@ -46,6 +51,10 @@ const tag = new Command('Displays specific text messages.', '', 0, null, (bot, m
   } else
   
   if(params[0] === "del") {
+    if(perm <= 1) {
+      bot.reply(msg, "Commande non authorisée: .tag del");
+      return;
+    } else {
     let tagname  = params[1],
         serverid = msg.server.id;
     knex.select("*").table("tags").where({ "tag": tagname, "server": serverid}).limit(1)
@@ -54,13 +63,13 @@ const tag = new Command('Displays specific text messages.', '', 0, null, (bot, m
         let delTag = tags.filter(t => t.tag ===tagname&&t.server===serverid);
         tags.remove(delTag);
         bot.reply(msg, `Le tag ${tagname} a été supprimé. Beuh-Bye!.`);
-    });
+    }); }
   } else {
     let tagname  = params[0],
         serverid = msg.server.id;
     let myTag = tags.filter(t => (t.tag ===tagname&&t.server===serverid))[0];
     if(!myTag) {
-      bot.reply(msg, `Le tag ${tagname} n'a pas été trouvé. Faire \`.info\` pour une liste de tags.`);
+      bot.reply(msg, `Le tag ${tagname} n'a pas été trouvé. Faire \`.tag\` pour une liste de tags.`);
     } else {
       bot.sendMessage(msg, "" + myTag.description);
     }

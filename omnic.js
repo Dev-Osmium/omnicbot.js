@@ -2,7 +2,6 @@
 
 const Discord = require('discord.js'),
 	  bot     = new Discord.Client({forceFetchUsers: true, autoReconnect: true, guildCreateTimeout: 0});
-const winston = require('winston');
 const util = require( "util" );
 var request = require("request");
 
@@ -14,9 +13,6 @@ const log = require(Constants.Util.LOGGER);
 const schedule = require("node-schedule");
 const knex = require('knex')(config.pgconf);
 
-// For permanent log instead of console: 
-winston.add(winston.transports.File, { filename: 'runfiles/winston.log' });
-winston.remove(winston.transports.Console);
 
 // Load all the commands + aliases
 const commands = require('./commands/index.js').commands,
@@ -34,7 +30,6 @@ bot.on("ready", () => {
 	      global.top_users_online = rows[0].max_online;
 	    });
 	  }
-
 });
 
 // Catch discord.js errors
@@ -44,7 +39,7 @@ bot.on('debug', e => { log.info(e); });
 
 
 bot.on("serverCreated", (server) => {
-	console.log("Joined " + server.name);
+	log.join("Joined " + server.name);
 });
 
 bot.once('ready', () => {
@@ -52,7 +47,7 @@ bot.once('ready', () => {
 	rule.minute = [0, 15, 30, 45]; // every 15 minutes of the hour.
 	//rule.minute = [new schedule.Range(0, 55,5)]; // every 5 minutes!
 	for(var server of bot.servers) {
-		console.log("Starting logging on " + server.name);
+		log.info("Starting logging on " + server.name);
 		var stats_scheduler = schedule.scheduleJob(rule, () =>{
 		  let query = {"server_id": server.id, "max_users": 0, "playing_ow": 0, "max_online": 0, "partial_groups": 0, "full_groups": 0};
 			query.max_users = server.members.length;
@@ -66,9 +61,6 @@ bot.once('ready', () => {
 			knex.insert(query, 'id').into('stats')
 			.catch( (error) => {
 				log.error(error);
-			})
-			.then( (id) => {
-			  log.info("Stats Recorded: " + id + ", query: " + JSON.stringify(query));	
 			});
 		});
 	  /*knex.select().table('new_members')
@@ -88,8 +80,10 @@ bot.on('message', msg => {
 	//Ignore if msg is from self or bot account
 	if(msg.author.id == bot.user.id || msg.author.bot) return;
 	
-	if(msg.content.startsWith(config.prefix)) {
-		var command  = msg.content.substring(config.prefix.length).split(" ")[0].toLowerCase();
+	let prefix = msg.server.id === "182203318670458880" ? "." : "|";
+	
+	if(msg.content.startsWith(prefix)) {
+		var command  = msg.content.substring(prefix.length).split(" ")[0].toLowerCase();
 		var suffix   = msg.content.substring(command.length + 2).trim();
 		var username = msg.server && msg.server.detailsOf(msg.author).nick ? msg.server.detailsOf(msg.author).nick : msg.author.username;
 		
@@ -122,7 +116,7 @@ bot.on('message', msg => {
 			userPermissionLevel = msg.author.id == perm3 ? 3 : userPermissionLevel;
 			
 			if(cData.permissionLevel <= userPermissionLevel) {
-				cData.handler(bot, msg, suffix);
+				cData.handler(bot, msg, suffix, userPermissionLevel);
 				log.command(msg.server, (msg.channel.name || msg.channel.id), msg.author.username, command, suffix);
 			}
 			else
@@ -134,19 +128,23 @@ bot.on('message', msg => {
 
 bot.on('raw', (event) => {
   if(event.t === "PRESENCE_UPDATE") { 
-	  	let server = bot.servers.get("id", event.d.guild_id),
-	  		member = server.members.get("id", event.d.user.id),
-	  		role = server.roles.get("name", "En Ondes");
+		let server = bot.servers.get("id", event.d.guild_id),
+			member = server.members.get("id", event.d.user.id),
+		role = server.roles.get("name", "En Ondes");
 	  if(!role) { 
 	  	log.error(`Role was not found when attempting to upgrade Streamer user on ${server.name}`);
 	  	return;
 	  }
-  	if(event.d.game && event.d.game.type == 1 && event.d.game.name.indexOf("Overwatch") > -1) {
-	  	bot.addMemberToRole(member, role, (err) => {
-			if (err)
-				log.error(`Could not add Streamer to server role on ${server.name} because of:\n${err}`);
-		});
-	  	//log.info(`${member.name} has started streaming on ${event.d.game.url}`);
+
+  	if(event.d.game && event.d.game.type == 1) {
+			let twitchUser = event.d.game.url.split("/").slice(-1)[0];
+			request("https://api.twitch.tv/kraken/streams/"+twitchUser, (err, response, body) => {
+				if(err) log.error(err);
+		    log.info("Client playing streaming game: " + JSON.parse(body).stream.game);
+		  	bot.addMemberToRole(member, role, (err) => {
+					if (err) log.error(`Could not add Streamer to server role on ${server.name} because of:\n${err}`);
+				});
+			});
   	} else {
   		bot.removeMemberFromRole(member, role);
   	}
@@ -155,28 +153,34 @@ bot.on('raw', (event) => {
 
 
 bot.on("serverNewMember", (server, user) => {
-	log.info("Nouvel Utilisateur! " + user.username);
-	
-	var message = util.format(config.welcome.message, user.username);
-	var messageRecipient = (config.welcome.inPrivate ? user : server.channels.get("name", config.welcome.channel));
-	bot.sendMessage(messageRecipient, message);
-  user.server = server.id;
-	newusers.add(user);
-	if(newusers.length >= 25) {
-		bot.sendMessage(server.defaultChannel, `Souhaitez la bienvenue à nos plus récents membres!\n ${newusers.join(", ")}`);
-		newusers = new Discord.Cache();
-	}
 
-	var milestoneStep = config.milestone.step;
-	var milestoneMessage = config.milestone.message;
-	if(server.members.length % milestoneStep == 0) {
-		bot.sendMessage(server.defaultChannel, util.format(milestoneMessage, server.members.length));
+	log.info(`${user.username} has joined ${server.name}`);
+	if(server.id === "182203318670458880") {
+			
+		var message = util.format(config.welcome.message, user.username);
+		var messageRecipient = (config.welcome.inPrivate ? user : server.channels.get("name", config.welcome.channel));
+		bot.sendMessage(messageRecipient, message);
+		user.server = server.id;
+		newusers.add(user);
+		if(newusers.length >= 25) {
+			bot.sendMessage(server.defaultChannel, `Souhaitez la bienvenue à nos plus récents membres!\n ${newusers.join(", ")}`);
+			newusers = new Discord.Cache();
+		}
+		
+		var milestoneStep = config.milestone.step;
+		var milestoneMessage = config.milestone.message;
+		if(server.members.length % milestoneStep == 0) {
+			bot.sendMessage(server.defaultChannel, util.format(milestoneMessage, server.members.length));
+		}
 	}
+	
 });
 
 bot.on("serverMemberRemoved", (server, user) => {
-	newusers.remove(user);
-	log.info(`${user.username} (${server.detailsOfUser(user).nick}) has left the server`);
+	if(server.id === "182203318670458880") {
+		newusers.remove(user);
+		log.leave(`${user.username} (${server.detailsOfUser(user).nick}) has left the server`);
+	}
 });
 
 bot.on("disconnected", () => {
@@ -189,10 +193,10 @@ process.on('SIGINT', () => {
     setTimeout(() => {
         process.exit(1);
     }, 5000);
-    console.log("Logging out.");
+    log.info("Logging out.");
     bot.setStatus("offline", null);
     bot.logout(()=> {
-        console.log("Bye");
+        log.info("Bye");
         process.exit(0);
     });
 });
