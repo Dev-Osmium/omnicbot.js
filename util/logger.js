@@ -2,24 +2,60 @@ const moment = require('moment'),
       chalk  = require('chalk'),
       clk    = new chalk.constructor({enabled: true});
 
-var http = require("http");
-var express = require("express");
 var logger = require("winston");
-var winstonWS = require("winston-websocket");
 
-//configure express
-var app = express()
-  .use(express.static("."));
-
-//create http server
-var server = http.createServer(app);
-
-//register websocet transport
-logger.add( winstonWS.WSTransport, { wsoptions: { server: server, path: './../logs' } });
-
-//start server
-server.listen(process.env.PORT, process.env.IP);
-console.log("Server is listening on port 3000");
+/// BEGIN WEBSOCKET
+/*
+var WebSocketServer = require('websocket').server;
+var http = require('http');
+ 
+var server = http.createServer(function(request, response) {
+    console.log((new Date()) + ' Received request for ' + request.url);
+    response.writeHead(404);
+    response.end();
+});
+server.listen(process.env.PORT, function() {
+    console.log((new Date()) + ' Server is listening on port '+process.env.PORT);
+});
+ 
+var wsServer = new WebSocketServer({
+    httpServer: server,
+    autoAcceptConnections: false
+});
+ 
+function originIsAllowed(origin) {
+  // put logic here to detect whether the specified origin is allowed. 
+  return true;
+}
+ 
+wsServer.on('request', function(request) {
+    if (!originIsAllowed(request.origin)) {
+      // Make sure we only accept requests from an allowed origin 
+      request.reject();
+      console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.');
+      return;
+    }
+    
+    var connection = request.accept('echo-protocol', request.origin);
+    console.log((new Date()) + ' Connection accepted.');
+    connection.on('message', function(message) {
+        if (message.type === 'utf8') {
+            console.log('Received Message: ' + message.utf8Data);
+            connection.sendUTF(message.utf8Data);
+        }
+        else if (message.type === 'binary') {
+            console.log('Received Binary Message of ' + message.binaryData.length + ' bytes');
+            connection.sendBytes(message.binaryData);
+        }
+    });
+    connection.on('close', function(reasonCode, description) {
+        console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
+    });
+    
+    connection.sendUTF("Welcome!");
+});
+*/
+/// END WEBSOCKET
 
 // Define the colors
 var cyan = clk.bold.cyan,

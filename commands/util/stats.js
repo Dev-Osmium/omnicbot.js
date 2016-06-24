@@ -1,27 +1,26 @@
 'use strict';
 
-const Discord = require("discord.js");
-const ytdl = require("ytdl-core");
-const Constants = require('./../../constants.js'); 
-const moment = require("moment");
+const r = require('rethinkdb');
 
-const Command   = require('./../Command.js');
-const config    = require(Constants.Util.CONFIG);
-
-const echo = new Command('Display Stats', '', 1, null, (bot, msg, suffix) => {
-  let knex = require('knex')(config.pgconf);
-/*  if(!suffix) {
-    bot.reply("Aucun URL de vidéo spécifié");
-  } else if (suffix === "latest") {
-*/
-    knex.select().table('stats').orderBy("ts", "desc").limit(1)
-    .then( (rows) => {
-      let r = rows[0];
-      bot.reply(msg, `Il y a eu un maximum de ${global.top_users_online} utilisateurs en ligne. Présentement:\nEn ligne: ${r.max_online} ; Sur Overwatch: ${r.playing_ow} ; Groupes: ${r.partial_groups}/${r.full_groups} (Partiel/Complet)`);
-    });
-
-
+var connection = null;
+r.connect( {host: 'localhost', port: 28015, db: "omnic"}, function(err, conn) {
+    if (err) throw err;
+    connection = conn;
 });
 
-module.exports = echo;
+const Command   = require('./../Command.js');
 
+const stats = new Command('Display Stats', '', 1, null, (bot, msg, suffix) => {
+
+    r.table("stats").filter({server_id: msg.server.id}).orderBy(r.desc("max_online")).limit(1).run(connection, (e, results) => {
+        results.toArray( (e, stats) => {
+          if(stats[0] && stats[0].max_online) {
+            global.top_users_online = stats[0].max_online;
+            bot.reply(msg, `Il y a eu un maximum de ${global.top_users_online} utilisateurs en ligne. Présentement:\nEn ligne: ${stats[0].max_online} ; Sur Overwatch: ${stats[0].playing_ow} ; Groupes: ${stats[0].partial_groups}/${stats[0].full_groups} (Partiel/Complet)`);
+          }
+        });
+
+    });
+});
+
+module.exports = stats;

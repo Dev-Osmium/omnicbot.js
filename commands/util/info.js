@@ -4,25 +4,29 @@ const Discord   = require('discord.js');
 const Constants = require('./../../constants.js'); 
 const Command   = require('./../Command.js');
 const config    = require(Constants.Util.CONFIG);
-const knex      = require('knex')(config.pgconf);
+const util      = require('util');
 
-const tags      = new Discord.Cache();
+const r = require('rethinkdb');
 
-
-// On Bootup, load all tags.
-knex.select().table('tags')
-.then( (rows) => {
-	for(let row of rows) {
-	    tags.add(row);
-	}
-	console.log(`Loaded a total of ${rows.length} tags from the database`);
+var connection = null;
+r.connect( {host: 'localhost', port: 28015, db: "omnic"}, function(err, conn) {
+    if (err) throw err;
+    connection = conn;
 });
 
 const tag = new Command('Displays specific text messages.', '', 0, null, (bot, msg, suffix, perm) => {
   console.log(`User permission level is: ${perm}`);
   if(!suffix) {
-    let servertags = tags.filter(t => t.server === msg.server.id);
-    bot.reply(msg, `Utilisez \`.tag nomDuTag\` pour appeler un des tag suivants.\nTags disponibles: ${servertags.map(t=>t.tag).join(", ")}`);
+  	r.table("tags").filter({server: msg.server.id}).run(connection, (e, c) => {
+  	  if(e) {
+  	    console.log(e);
+  	  } else {
+  	    c.toArray( (e, results) => {
+      	  bot.reply(msg, `Utilisez \`.tag nomDuTag\` pour appeler un des tag suivants.\nTags disponibles: ${results.map(t=>t.tag).join(", ")}`);
+  	      console.log(JSON.stringify(results));
+  	    });
+  	  }
+	  });
     return;
   }
   
@@ -37,17 +41,15 @@ const tag = new Command('Displays specific text messages.', '', 0, null, (bot, m
         contents = params.slice(2).join(" "),
         serverid = msg.server.id,
         userid   = msg.author.id;
-    let query = {"tag": tagname, "description": contents, "server": serverid, "added_by": userid};
-		knex.insert(query, 'id').into('tags')
-		.catch( (error) => {
-			console.log(error);
-		})
-		.then( (id) => {
-      console.log(`Ajout du tag ${tagname} par ${msg.author.name}\n${contents}`);
-      query.id = msg.id;
-      tags.add(query);
-      bot.reply(msg, `Le tag ${tagname} a été ajouté.`);
-		});
+    let query = {tag: tagname, contents: contents, server: serverid, user: userid};
+    r.table("tags").insert(query).run(connection, (e, c) => {
+      if(e) {
+        bot.reply(msg, `Une erreur s'est produite. Oops... \n${e}`);
+      } else {
+        bot.reply(msg, `Le tag ${tagname} a été ajouté.`);
+      }
+    });
+    
   } else
   
   if(params[0] === "del") {
@@ -55,24 +57,35 @@ const tag = new Command('Displays specific text messages.', '', 0, null, (bot, m
       bot.reply(msg, "Commande non authorisée: .tag del");
       return;
     } else {
-    let tagname  = params[1],
-        serverid = msg.server.id;
-    knex.select("*").table("tags").where({ "tag": tagname, "server": serverid}).limit(1)
-    .then( rows => {
-        knex('tags').where('id', rows[0].id).del();
-        let delTag = tags.filter(t => t.tag ===tagname&&t.server===serverid);
-        tags.remove(delTag);
-        bot.reply(msg, `Le tag ${tagname} a été supprimé. Beuh-Bye!.`);
-    }); }
+      let tagname  = params[1],
+          serverid = msg.server.id;
+      console.log(`Attempting to delete tag ${tagname} from ${serverid}`);
+      r.table("tags").filter({tag: tagname, server: serverid}).delete().run(connection, (e, resp) => {
+        if(e) {
+          bot.reply(msg, `Une erreur s'est produite. Oops... \n${e}`);
+        } else if(resp.deleted === 1) {
+          bot.reply(msg, `Le tag ${tagname} a été supprimé.`);
+        } else {
+          bot.reply(msg, `Quelque chose d'innatendu s'est produite! Vas voir la console, boss!...`);
+          console.log(JSON.stringify(resp));
+        }
+      });
+    }
+
   } else {
     let tagname  = params[0],
         serverid = msg.server.id;
-    let myTag = tags.filter(t => (t.tag ===tagname&&t.server===serverid))[0];
-    if(!myTag) {
-      bot.reply(msg, `Le tag ${tagname} n'a pas été trouvé. Faire \`.tag\` pour une liste de tags.`);
-    } else {
-      bot.sendMessage(msg, "" + myTag.description);
-    }
+    r.table("tags").filter({tag: tagname, server: serverid}).run(connection, (e, results) => {
+        results.toArray( (e, tags) => {
+          if(tags[0] && tags[0].tag) {
+            bot.sendMessage(msg, "" + tags[0].contents);
+          }
+          else {
+            bot.reply(msg, `Le tag est introuvable. Utilisez \`.tag\` pour une liste de tags.`);
+          }
+        });
+
+    });
   }
 });
 

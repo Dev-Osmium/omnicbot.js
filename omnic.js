@@ -11,7 +11,14 @@ const Constants = require('./constants.js');
 const config = require(Constants.Util.CONFIG);
 const log = require(Constants.Util.LOGGER);
 const schedule = require("node-schedule");
-const knex = require('knex')(config.pgconf);
+
+const r = require('rethinkdb');
+
+var connection = null;
+r.connect( {host: 'localhost', port: 28015, db: "omnic"}, function(err, conn) {
+    if (err) throw err;
+    connection = conn;
+});
 
 
 // Load all the commands + aliases
@@ -24,11 +31,15 @@ global.top_users_online = [];
 
 bot.on("ready", () => {
 	log.info("Prêt à servir dans " + bot.channels.length + " canaux sur " + bot.servers.length + " serveur.");
-		for(let server in bot.servers) {
-		  knex.select("max_online").table('stats').orderBy("max_online", "desc").limit(1)
-	    .then( (rows) => {
-	      global.top_users_online = rows[0].max_online;
-	    });
+		for(let server of bot.servers) {
+    r.table("stats").filter({server_id: server.id}).orderBy(r.desc("max_online")).limit(1).run(connection, (e, results) => {
+        results.toArray( (e, stats) => {
+          if(stats[0] && stats[0].max_online) {
+            global.top_users_online = stats[0].max_online;
+          }
+        });
+
+    });
 	  }
 });
 
@@ -49,7 +60,7 @@ bot.once('ready', () => {
 	for(var server of bot.servers) {
 		log.info("Starting logging on " + server.name);
 		var stats_scheduler = schedule.scheduleJob(rule, () =>{
-		  let query = {"server_id": server.id, "max_users": 0, "playing_ow": 0, "max_online": 0, "partial_groups": 0, "full_groups": 0};
+		  let query = {ts_stat:  r.now(), "server_id": server.id, "max_users": 0, "playing_ow": 0, "max_online": 0, "partial_groups": 0, "full_groups": 0};
 			query.max_users = server.members.length;
 			query.playing_ow = server.members.filter(m=> m.game&&m.game.name==="Overwatch").length;
 			let max_online = server.members.filter(m => m.status !== "offline").length;
@@ -58,21 +69,10 @@ bot.once('ready', () => {
 			let voiceChans = server.channels.filter(c => c instanceof Discord.VoiceChannel&&c.name!="Absent - AFK");
 			query.full_groups = voiceChans.filter(c=>c.members.length > 5).length;
 			query.partial_groups = voiceChans.filter(c=>c.members.length<6&&c.members.length>0).length;
-			knex.insert(query, 'id').into('stats')
-			.catch( (error) => {
-				log.error(error);
-			});
+      r.table("stats").insert(query).run(connection, (e, c) => {
+	      if(e) log.error(e);
+      });
 		});
-	  /*knex.select().table('new_members')
-    .then( (rows) => {
-    	for(let row of rows) {
-    		bot.members.get("id", row["user_id"], (err, u) => {
-    			if(!err) newusers.add(u);
-    		});
-    		
-    	}
-    });*/
-		
 	}
 });
 
@@ -80,7 +80,14 @@ bot.on('message', msg => {
 	//Ignore if msg is from self or bot account
 	if(msg.author.id == bot.user.id || msg.author.bot) return;
 	
-	let prefix = msg.server.id === "182203318670458880" ? "." : "|";
+	if(!msg.server) {
+		log.info(`Private Message: ${msg.content}`);
+		bot.reply(msg, `Les commandes en privés ne sont pas disponible, SVP les utiliser dans un serveur!`);
+		return;
+	}
+	
+	//let prefix = msg.server.id === "182203318670458880" ? "." : "|";
+	let prefix = "+";
 	
 	if(msg.content.startsWith(prefix)) {
 		var command  = msg.content.substring(prefix.length).split(" ")[0].toLowerCase();
