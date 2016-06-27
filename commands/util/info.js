@@ -15,7 +15,7 @@ r.connect( {host: 'localhost', port: 28015, db: "omnic"}, function(err, conn) {
 });
 
 const tag = new Command('Displays specific text messages.', '', 0, null, (bot, msg, suffix, conf, perm) => {
-  console.log(`User permission level is: ${perm}`);
+  //console.log(`User permission level is: ${perm}`);
   if(!suffix) {
   	r.table("tags").filter({server: msg.server.id}).run(connection, (e, c) => {
   	  if(e) {
@@ -23,7 +23,7 @@ const tag = new Command('Displays specific text messages.', '', 0, null, (bot, m
   	  } else {
   	    c.toArray( (e, results) => {
       	  bot.reply(msg, `Utilisez \`.tag nomDuTag\` pour appeler un des tag suivants.\nTags disponibles: ${results.map(t=>t.tag).join(", ")}`);
-  	      console.log(JSON.stringify(results));
+  	      //console.log(JSON.stringify(results));
   	    });
   	  }
 	  });
@@ -59,7 +59,7 @@ const tag = new Command('Displays specific text messages.', '', 0, null, (bot, m
     } else {
       let tagname  = params[1],
           serverid = msg.server.id;
-      console.log(`Attempting to delete tag ${tagname} from ${serverid}`);
+      //console.log(`Attempting to delete tag ${tagname} from ${serverid}`);
       r.table("tags").filter({tag: tagname, server: serverid}).delete().run(connection, (e, resp) => {
         if(e) {
           bot.reply(msg, `Une erreur s'est produite. Oops... \n${e}`);
@@ -67,7 +67,7 @@ const tag = new Command('Displays specific text messages.', '', 0, null, (bot, m
           bot.reply(msg, `Le tag ${tagname} a été supprimé.`);
         } else {
           bot.reply(msg, `Quelque chose d'innatendu s'est produite! Vas voir la console, boss!...`);
-          console.log(JSON.stringify(resp));
+          //console.log(JSON.stringify(resp));
         }
       });
     }
