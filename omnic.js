@@ -77,12 +77,18 @@ bot.once('ready', () => {
 	      log.info(`Logging for ${server.name}: ` + JSON.stringify(query));
       });
 		});
-
+		try {
     r.table("servers").get(server.id).run(connection, (e, resp) => {
       if(e) log.error(`Une erreur s'est produite. Oops... \n${e}`);
       log.info(`Server Configuration loaded for: ${resp.id}`);
       serverconf.add(resp);
     });
+		} catch (e) {
+			log.error(e);
+			r.table("servers").insert({id: server.id, prefix: "|", lang: "en", stats: false, welcome_count: false}).run(connection, (e, resp) => {
+				if(e) log.error(e);
+			});
+		}
 	}
 });
 
