@@ -9,8 +9,10 @@ const   about   = require('./admin/about.js'),
         tag    = require('./util/info.js'),
         play    = require('./util/play.js'),
         bnet    = require('./util/bnet.js'),
+        lastseen   = require('./util/lastseen.js'),
         rename    = require('./admin/rename.js'),
         reload    = require('./admin/reload.js');
+        
 
 
 exports.aliases = {
@@ -27,6 +29,7 @@ exports.commands = {
     "play"          : play,
     "bnet"          : bnet,
     "rename"        : rename,
+    "lastseen"        : lastseen,
     "stats"         : stats,
     "eval"          : _eval,
     "userlist"      : userlist,

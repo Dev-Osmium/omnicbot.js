@@ -87,7 +87,6 @@ const tag = new Command('Displays specific text messages.', '', 0, null, (bot, m
 
     });
   }
-  bot.deleteMessage(msg);
 });
 
 module.exports = tag;

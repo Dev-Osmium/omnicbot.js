@@ -47,7 +47,7 @@ const fEval = new Command('Evaluates code', '*code*', 3, null, (bot, msg, suffix
 
 var clean = (text) => {
     if (typeof(text) === "string") {
-        return text.replace("``", "`" + String.fromCharCode(8203) + "`");
+        return text.replace(/`/g, "`" + String.fromCharCode(8203)).replace(/@/g, "@" + String.fromCharCode(8203));
     }
     else {
         return text;

@@ -2,7 +2,6 @@
 
 const Constants = require('./../../constants.js'); 
 const moment		= require('moment');
-moment.locale("fr");
 
 const Command   = require('./../Command.js');
 const config    = require(Constants.Util.CONFIG);
