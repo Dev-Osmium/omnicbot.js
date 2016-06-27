@@ -13,7 +13,6 @@ const log = require(Constants.Util.LOGGER);
 const schedule = require("node-schedule");
 
 const r = require('rethinkdb');
-const deep = require('deep-diff');
 
 var connection = null;
 r.connect( {host: 'localhost', port: 28015, db: "omnic"}, function(err, conn) {
@@ -149,7 +148,7 @@ bot.on('message', msg => {
 			userPermissionLevel = msg.author.id == perm3 ? 3 : userPermissionLevel;
 			
 			if(cData.permissionLevel <= userPermissionLevel) {
-				cData.handler(bot, msg, suffix, userPermissionLevel);
+				cData.handler(bot, msg, suffix, conf, userPermissionLevel);
 				log.command(msg.server, (msg.channel.name || msg.channel.id), msg.author.username, command, suffix);
 			}
 			else
@@ -160,23 +159,20 @@ bot.on('message', msg => {
 
 
 bot.on('presence', (o, n) => {
-	var diff = deep(o, n)[0];
 	var query = {id: n.id};
 	
-	if(diff.path[0] === "status" && diff.rhs === "offline") {
+	if(n.status === "offline"){
 		query.last_seen = r.now();
 	}
+
 	var server = bot.servers.get("id", "185776869398806529");
-	
-	if(diff.path[0] === "game" && server.members.has("id", n.id)) {
-		if(diff.rhs && diff.rhs.type === 1) {
-			var twitchUser = diff.rhs.url.split("/").slice(-1)[0];
+
+	if(n.game && server.members.has("id", n.id)) {
+		if(n.game && n.game.type === 1) {
+			var twitchUser = n.game.url.split("/").slice(-1)[0];
 			var role = "190608399593897994";
 			request("https://api.twitch.tv/kraken/streams/"+twitchUser, (err, response, body) => {
 				if(err) log.error(err);
-				return body;
-			})
-			.then( (body) => {
 			  log.info(n.username + " playing streaming game: " + JSON.parse(body).stream.game);
 			  if(JSON.parse(body).stream.game === "Overwatch") {
 			  	bot.addMemberToRole(n, role, (err) => {
@@ -186,17 +182,18 @@ bot.on('presence', (o, n) => {
 						query.twitch_user = twitchUser;
 					});
 			  }
-
 			});
 		} else {
 			bot.removeMemberFromRole(n, role);
 		}
 	}
-	setTimeout(function(){
-	  r.table("users").insert(query, {conflict:"update"}).run(connection, (e, c) => {
-	    if(e) log.error(e);
-	  });
-	}, 1000);
+	if(Object.keys(query).length > 1) {
+		setTimeout(function(){
+		  r.table("users").insert(query, {conflict:"update"}).run(connection, (e, c) => {
+		    if(e) log.error(e);
+		  });
+		}, 1000);
+	}
 });
 
 bot.on("serverNewMember", (server, user) => {

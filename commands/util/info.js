@@ -14,7 +14,7 @@ r.connect( {host: 'localhost', port: 28015, db: "omnic"}, function(err, conn) {
     connection = conn;
 });
 
-const tag = new Command('Displays specific text messages.', '', 0, null, (bot, msg, suffix, perm) => {
+const tag = new Command('Displays specific text messages.', '', 0, null, (bot, msg, suffix, conf, perm) => {
   console.log(`User permission level is: ${perm}`);
   if(!suffix) {
   	r.table("tags").filter({server: msg.server.id}).run(connection, (e, c) => {
