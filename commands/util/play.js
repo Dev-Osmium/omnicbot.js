@@ -19,7 +19,7 @@ const echo = new Command('Plays YouTube Video', '', 1, null, (bot, msg, suffix) 
   if(!suffix) {
     bot.reply("Aucun URL de vidéo spécifié");
   } else {
-    var parts = getparams(suffix, 3, " ");
+    var parts = getparams(suffix, 2, " ");
     var id = parts[1],
         channel = parts[2],
         url = false,

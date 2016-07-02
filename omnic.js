@@ -1,7 +1,7 @@
 "use strict"; 
 
 const Discord = require('discord.js'),
-	  bot     = new Discord.Client({forceFetchUsers: true, autoReconnect: true, guildCreateTimeout: 1000});
+	  bot     = new Discord.Client({forceFetchUsers: true, autoReconnect: true, guildCreateTimeout: 3000});
 const util = require( "util" );
 var request = require("request");
 
@@ -57,6 +57,19 @@ bot.on("serverCreated", (server) => {
 
 bot.once('ready', () => {
 	for(let server of bot.servers) {
+		try {
+    r.table("servers").get(server.id).run(connection, (e, resp) => {
+      if(e) log.error(`Une erreur s'est produite. Oops... \n${e}`);
+      serverconf.add(resp);
+    });
+		} catch (e) {
+			log.error(e);
+			r.table("servers").insert({id: server.id, prefix: "|", lang: "en", stats: false, welcome_count: false}).run(connection, (e, resp) => {
+				if(e) log.error(e);
+			});
+		}
+	}
+	for(let server of bot.servers) {
 		let rule = new schedule.RecurrenceRule();
 		rule.minute = [0, 15, 30, 45]; // every 15 minutes of the hour.
 		schedule.scheduleJob(rule, () =>{
@@ -73,17 +86,6 @@ bot.once('ready', () => {
 	      if(e) log.error(e);
       });
 		});
-		try {
-    r.table("servers").get(server.id).run(connection, (e, resp) => {
-      if(e) log.error(`Une erreur s'est produite. Oops... \n${e}`);
-      serverconf.add(resp);
-    });
-		} catch (e) {
-			log.error(e);
-			r.table("servers").insert({id: server.id, prefix: "|", lang: "en", stats: false, welcome_count: false}).run(connection, (e, resp) => {
-				if(e) log.error(e);
-			});
-		}
 	}
 });
 
@@ -110,6 +112,11 @@ bot.on('message', msg => {
 */
 
 	var conf = serverconf.get(msg.server.id);
+	if(!conf) {
+		console.log(`Could not get configuration for server ${msg.server.name}`);
+		return;	
+	}
+
 
 	var prefix = conf.prefix;
 	
@@ -166,13 +173,17 @@ bot.on('presence', (o, n) => {
 	
 	bot.servers.map(s => {
 		var conf = serverconf.get(s.id);
+		if(!conf) {
+			console.log(`Could not get configuration for server ${s.name}`);
+			return;
+		}
 		if(conf.streaming_role) {
 			var role = s.roles.get(conf.streaming_role);
 			
 			if(n.game && s.members.has("id", n.id) && n.game.type === 1) {
 
 				var twitchUser = n.game.url.split("/").slice(-1)[0];
-				//log.info(`Awww yeah, gonna twitch it up with ${n.username} on ${s.name} (${twitchUser})!`);
+				log.info(`Awww yeah, gonna twitch it up with ${n.username} on ${s.name} (${twitchUser})!`);
 				request("https://api.twitch.tv/kraken/streams/"+twitchUser, (err, response, body) => {
 					if(err) log.error(err);
 					let game_played = JSON.parse(body).stream.game;
@@ -191,8 +202,8 @@ bot.on('presence', (o, n) => {
 				});
 				
 			} else if(bot.memberHasRole(n, role)) {
-				//console.log(`Awww, ${n.username} stopped streaming!`);
-				bot.removeMemberFromRole(n, "190497505010515968");
+				console.log(`Awww, ${n.username} stopped streaming!`);
+				bot.removeMemberFromRole(n, role, (e) => {if(e) log.error(e)});
 			}
 		}
 	});
@@ -202,8 +213,15 @@ bot.on("serverNewMember", (server, user) => {
 
 	log.info(`${user.username} has joined ${server.name}`);
 
-
 	var conf = serverconf.get(server.id);
+	if(!conf) {
+		console.log(`Could not get configuration for server ${server.name}`);
+		return;	
+	}
+	
+	if(conf.log_channel) {
+		bot.sendMessage(conf.log_channel, `Nouvel Utilisateur: ${user.username} (${user.id})`);
+	}
 	
 	if(conf.welcome_count) {
 		//console.log(`${user.username} has joined ${server.name}`);
@@ -243,7 +261,17 @@ bot.on("serverNewMember", (server, user) => {
 
 bot.on("serverMemberRemoved", (server, user) => {
 	log.leave(`${user.username} (${server.detailsOfUser(user).nick}) has left ${server.name}`);
+
 	var conf = serverconf.get(server.id);
+	if(!conf) {
+		console.log(`Could not get configuration for server ${server.name}`);
+		return;	
+	}
+
+	if(conf.log_channel) {
+		bot.sendMessage(conf.log_channel, `Utilisateur a quitté: ${user.username} (${user.id})`);
+	}
+
 	if(conf.welcome_count) {
 		r.table("new_users").filter({id: user.id, server: server.id}).delete().run(connection);
 	}
