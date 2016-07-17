@@ -2,16 +2,16 @@
 
 const moment		= require('moment');
 moment.locale('fr');
-const r = require('rethinkdb');
 
 const Command   = require('./../Command.js');
 
-
-var connection = null;
-r.connect( {host: 'localhost', port: 28015, db: "omnic"}, function(err, conn) {
-    if (err) throw err;
-    connection = conn;
+var r = null, conn = null;
+require("./../../util/db.js").init( (err, redb, connection) => {
+	if(err) console.log(err);
+	r = redb;
+	conn = connection;
 });
+
 
 const lastseen = new Command('Retrieves Battle.net Info + MasterOverwatch Profile Link.', '', 0, null, (bot, msg, suffix, conf) => {
     moment.locale(conf.lang);
@@ -19,7 +19,7 @@ const lastseen = new Command('Retrieves Battle.net Info + MasterOverwatch Profil
     if(msg.mentions.length > 0) {
         for(let user of msg.mentions) {
             if(user.status === 'offline') {
-              	r.table("users").get(user.id).run(connection, (e, c) => {
+              	r.table("users").get(user.id).run(conn, (e, c) => {
               	  if(e) console.log(e);
               	  else {
               	      if(c) bot.reply(msg, `La dernière fois que j'ai vu ${bot.users.get(user.id).username} était: ${moment(c.last_seen).fromNow()}`);

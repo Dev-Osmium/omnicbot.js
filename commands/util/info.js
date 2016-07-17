@@ -1,23 +1,28 @@
 'use strict';
 
-const Discord   = require('discord.js');
-const Constants = require('./../../constants.js'); 
 const Command   = require('./../Command.js');
-const config    = require(Constants.Util.CONFIG);
-const util      = require('util');
 
-const r = require('rethinkdb');
+/*
+// Translation stuff
+const I18n = require("./util/i18n.js");
+const bundle = [];
+bundle["fr"] = require("./lang/fr.json");
+const langsetup = {};
+langsetup.fr = {"locale": "fr-CA", "defaultCurrency": "CAD", "messageBundle": bundle["fr"]};
+langsetup.en = {"locale": "en-US", "defaultCurrency": "USD", "messageBundle": bundle["en"]};
+*/
 
-var connection = null;
-r.connect( {host: 'localhost', port: 28015, db: "omnic"}, function(err, conn) {
-    if (err) throw err;
-    connection = conn;
+var r = null, conn = null;
+require("./../../util/db.js").init( (err, redb, connection) => {
+	if(err) console.log(err);
+	r = redb;
+	conn = connection;
 });
 
 const tag = new Command('Displays specific text messages.', '', 0, null, (bot, msg, suffix, conf, perm) => {
   //console.log(`User permission level is: ${perm}`);
   if(!suffix) {
-  	r.table("tags").filter({server: msg.server.id}).run(connection, (e, c) => {
+  	r.table("tags").filter({server: msg.server.id}).run(conn, (e, c) => {
   	  if(e) {
   	    console.log(e);
   	  } else {
@@ -42,7 +47,7 @@ const tag = new Command('Displays specific text messages.', '', 0, null, (bot, m
         serverid = msg.server.id,
         userid   = msg.author.id;
     let query = {tag: tagname, contents: contents, server: serverid, user: userid};
-    r.table("tags").insert(query).run(connection, (e, c) => {
+    r.table("tags").insert(query).run(conn, (e, c) => {
       if(e) {
         bot.reply(msg, `Une erreur s'est produite. Oops... \n${e}`);
       } else {
@@ -60,7 +65,7 @@ const tag = new Command('Displays specific text messages.', '', 0, null, (bot, m
       let tagname  = params[1],
           serverid = msg.server.id;
       //console.log(`Attempting to delete tag ${tagname} from ${serverid}`);
-      r.table("tags").filter({tag: tagname, server: serverid}).delete().run(connection, (e, resp) => {
+      r.table("tags").filter({tag: tagname, server: serverid}).delete().run(conn, (e, resp) => {
         if(e) {
           bot.reply(msg, `Une erreur s'est produite. Oops... \n${e}`);
         } else if(resp.deleted === 1) {
@@ -75,7 +80,7 @@ const tag = new Command('Displays specific text messages.', '', 0, null, (bot, m
   } else {
     let tagname  = params[0],
         serverid = msg.server.id;
-    r.table("tags").filter({tag: tagname, server: serverid}).run(connection, (e, results) => {
+    r.table("tags").filter({tag: tagname, server: serverid}).run(conn, (e, results) => {
         results.toArray( (e, tags) => {
           if(tags[0] && tags[0].tag) {
             bot.sendMessage(msg, "" + tags[0].contents);

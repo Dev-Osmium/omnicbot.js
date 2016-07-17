@@ -12,12 +12,19 @@ const config = require(Constants.Util.CONFIG);
 const log = require(Constants.Util.LOGGER);
 const schedule = require("node-schedule");
 
-const r = require('rethinkdb');
+// Translation stuff
+const I18n = require("./util/i18n.js");
+const bundle = [];
+bundle["fr"] = require("./lang/fr.json");
+const langsetup = {};
+langsetup.fr = {"locale": "fr-CA", "defaultCurrency": "CAD", "messageBundle": bundle["fr"]};
+langsetup.en = {"locale": "en-US", "defaultCurrency": "USD", "messageBundle": bundle["en"]};
 
-var connection = null;
-r.connect( {host: 'localhost', port: 28015, db: "omnic"}, function(err, conn) {
-    if (err) throw err;
-    connection = conn;
+var r = null, conn = null;
+require("./util/db.js").init( (err, redb, connection) => {
+	if(err) console.log(err);
+	r = redb;
+	conn = connection;
 });
 
 // Load all the commands + aliases
@@ -31,7 +38,7 @@ global.top_users_online = [];
 bot.on("ready", () => {
 	log.info("Prêt à servir dans " + bot.channels.length + " canaux sur " + bot.servers.length + " serveur.");
 		for(let server of bot.servers) {
-    r.table("stats").filter({server_id: server.id}).orderBy(r.desc("max_online")).limit(1).run(connection, (e, results) => {
+    r.table("stats").filter({server_id: server.id}).orderBy(r.desc("max_online")).limit(1).run(conn, (e, results) => {
         results.toArray( (e, stats) => {
           if(stats[0] && stats[0].max_online) {
             global.top_users_online = stats[0].max_online;
@@ -49,7 +56,7 @@ bot.on('warn', e => { log.warn(e); });
 
 
 bot.on("serverCreated", (server) => {
-	r.table("servers").insert({id: server.id, prefix: "|", lang: "en", stats: false, welcome_count: false}).run(connection, (e, resp) => {
+	r.table("servers").insert({id: server.id, prefix: "|", lang: "en", stats: false, welcome_count: false}).run(conn, (e, resp) => {
 		if(e) log.error(e);
 	});
 	log.join("Joined " + server.name);
@@ -58,13 +65,13 @@ bot.on("serverCreated", (server) => {
 bot.once('ready', () => {
 	for(let server of bot.servers) {
 		try {
-    r.table("servers").get(server.id).run(connection, (e, resp) => {
+    r.table("servers").get(server.id).run(conn, (e, resp) => {
       if(e) log.error(`Une erreur s'est produite. Oops... \n${e}`);
       serverconf.add(resp);
     });
 		} catch (e) {
 			log.error(e);
-			r.table("servers").insert({id: server.id, prefix: "|", lang: "en", stats: false, welcome_count: false}).run(connection, (e, resp) => {
+			r.table("servers").insert({id: server.id, prefix: "|", lang: "en", stats: false, welcome_count: false}).run(conn, (e, resp) => {
 				if(e) log.error(e);
 			});
 		}
@@ -82,7 +89,7 @@ bot.once('ready', () => {
 			let voiceChans = server.channels.filter(c => c instanceof Discord.VoiceChannel&&c.name!="Absent - AFK");
 			query.full_groups = voiceChans.filter(c=>c.members.length > 5).length;
 			query.partial_groups = voiceChans.filter(c=>c.members.length<6&&c.members.length>0).length;
-      r.table("stats").insert(query).run(connection, (e, c) => {
+      r.table("stats").insert(query).run(conn, (e, c) => {
 	      if(e) log.error(e);
       });
 		});
@@ -94,8 +101,8 @@ bot.on('message', msg => {
 	if(msg.author.id == bot.user.id || msg.author.bot) return;
 	
 	if(!msg.server) {
-		log.info(`Private Message: ${msg.content}`);
-		bot.reply(msg, `Hey! I'm not that sorta bot, buddy! You wanna talk to me, use the proper channels!`);
+		log.info(`Private Message from ${msg.author.name}: ${msg.content}`);
+		bot.reply(msg, `Hi! I'm a bot - I don't chat or respond to private messages.\nPlease, use a channel in a server to throw commands at me, I won't mind!`);
 		return;
 	}
 
@@ -117,6 +124,8 @@ bot.on('message', msg => {
 		return;	
 	}
 
+  var i18n;
+  i18n = I18n.use(langsetup[conf.lang]);
 
 	var prefix = conf.prefix;
 	
@@ -155,7 +164,7 @@ bot.on('message', msg => {
 				log.command(msg.server, (msg.channel.name || msg.channel.id), msg.author.username, command, suffix);
 			}
 			else
-				bot.sendMessage(msg.channel, `**${username}**, vous n'êtes pas authorisé à utiliser la commande \`${command}\``);
+				bot.sendMessage(msg.channel, i18n `**${username}**, you are not authorized to use the \`${command}\` command.`);
 		}
 	} 
 });
@@ -166,7 +175,7 @@ bot.on('presence', (o, n) => {
 	
 	if(n.status === "offline"){
 		query.last_seen = r.now();
-	  r.table("users").insert(query, {conflict:"update"}).run(connection, (e, c) => {
+	  r.table("users").insert(query, {conflict:"update"}).run(conn, (e, c) => {
 	    if(e) log.error(e);
 	  });
 	}
@@ -183,16 +192,16 @@ bot.on('presence', (o, n) => {
 			if(n.game && s.members.has("id", n.id) && n.game.type === 1) {
 
 				var twitchUser = n.game.url.split("/").slice(-1)[0];
-				log.info(`Awww yeah, gonna twitch it up with ${n.username} on ${s.name} (${twitchUser})!`);
+				//log.info(`Awww yeah, gonna twitch it up with ${n.username} on ${s.name} (${twitchUser})!`);
 				request("https://api.twitch.tv/kraken/streams/"+twitchUser, (err, response, body) => {
-					if(err) log.error(err);
+					if(err) { log.error(err) }
 					let game_played = JSON.parse(body).stream.game;
 				  if(game_played === "Overwatch") {
 				  	bot.addMemberToRole(n, role, (err) => {
 							if (err) log.error(`Could not add Streamer to server role on ${s.name} because of:\n${err}`);
 							query.last_streamed = r.now();
 							query.twitch_user = twitchUser;
-						  r.table("users").insert(query, {conflict:"update"}).run(connection, (e, c) => {
+						  r.table("users").insert(query, {conflict:"update"}).run(conn, (e, c) => {
 						    if(e) log.error(e);
 						  });
 						});
@@ -202,7 +211,7 @@ bot.on('presence', (o, n) => {
 				});
 				
 			} else if(bot.memberHasRole(n, role)) {
-				console.log(`Awww, ${n.username} stopped streaming!`);
+				//console.log(`Awww, ${n.username} stopped streaming!`);
 				bot.removeMemberFromRole(n, role, (e) => {if(e) log.error(e)});
 			}
 		}
@@ -226,11 +235,11 @@ bot.on("serverNewMember", (server, user) => {
 	if(conf.welcome_count) {
 		//console.log(`${user.username} has joined ${server.name}`);
 	
-	  r.table("new_users").insert({id: user.id, mention: user.mention(), server: server.id, joined: r.now()}).run(connection, (e, c) => {
+	  r.table("new_users").insert({id: user.id, mention: user.mention(), server: server.id, joined: r.now()}).run(conn, (e, c) => {
 	    if(e) console.log(e);
 	  });
 	
-		r.table("new_users").filter({server: server.id}).run(connection, (e, results) => {
+		r.table("new_users").filter({server: server.id}).run(conn, (e, results) => {
 			return results;
 		})
 		.then( (results) => {
@@ -238,7 +247,7 @@ bot.on("serverNewMember", (server, user) => {
 	      //console.log("There are " + users.length + " users in queue to be welcomed on " + server.name);
 	      if(users.length >= conf.welcome_count) {
 					bot.sendMessage(server.defaultChannel, `Souhaitez la bienvenue à nos plus récents membres!\n ${users.map(user => user.mention).join(", ")}`);
-	        r.table("new_users").filter({server: server.id}).delete().run(connection);
+	        r.table("new_users").filter({server: server.id}).delete().run(conn);
 	      }
 	    });
 		});
@@ -273,7 +282,7 @@ bot.on("serverMemberRemoved", (server, user) => {
 	}
 
 	if(conf.welcome_count) {
-		r.table("new_users").filter({id: user.id, server: server.id}).delete().run(connection);
+		r.table("new_users").filter({id: user.id, server: server.id}).delete().run(conn);
 	}
 });
 

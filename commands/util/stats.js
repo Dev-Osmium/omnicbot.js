@@ -17,12 +17,8 @@ const stats = new Command('Display Stats', '', 1, null, (bot, msg, suffix) => {
 		query.playing_ow = msg.server.members.filter(m=> m.game&&m.game.name==="Overwatch").length;
 		let max_online = msg.server.members.filter(m => m.status !== "offline").length;
 		query.max_online = max_online;
-		if(max_online > GLOBAL) GLOBAL.top_users_online = max_online;
-		let voiceChans = msg.server.channels.filter(c => c instanceof Discord.VoiceChannel&&c.name!="Absent - AFK");
-		query.full_groups = voiceChans.filter(c=>c.members.length > 5).length;
-		query.partial_groups = voiceChans.filter(c=>c.members.length<6&&c.members.length>0).length;
-
-    bot.reply(msg, `Il y a eu un maximum de ${global.top_users_online} utilisateurs en ligne. Présentement:\nEn ligne: ${query.max_online} ; Sur Overwatch: ${query.playing_ow} ; Groupes: ${query.partial_groups}/${query.full_groups} (Partiel/Complet)`);
+		if(max_online > global.top_users_online) global.top_users_online = max_online;
+    bot.reply(msg, `Il y a eu un maximum de ${global.top_users_online}/${query.max_users} utilisateurs en ligne. Présentement:\nEn ligne: ${query.max_online} ; Sur Overwatch: ${query.playing_ow}`);
 });
 
 module.exports = stats;

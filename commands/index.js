@@ -8,12 +8,11 @@ const   about   = require('./admin/about.js'),
         stats    = require('./util/stats.js'),
         tag    = require('./util/info.js'),
         play    = require('./util/play.js'),
-        bnet    = require('./util/bnet.js'),
+        team    = require('./fun/team.js'),
+        //bnet    = require('./util/bnet.js'),
         lastseen   = require('./util/lastseen.js'),
         rename    = require('./admin/rename.js'),
         reload    = require('./admin/reload.js');
-        
-
 
 exports.aliases = {
     "who"           : "about",
@@ -27,9 +26,10 @@ exports.commands = {
     "reload"        : reload,
     "tag"           : tag,
     "play"          : play,
-    "bnet"          : bnet,
+    "team"          : team,
+    //"bnet"          : bnet,
     "rename"        : rename,
-    "lastseen"        : lastseen,
+    "lastseen"      : lastseen,
     "stats"         : stats,
     "eval"          : _eval,
     "userlist"      : userlist,

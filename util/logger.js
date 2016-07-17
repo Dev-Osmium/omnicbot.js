@@ -76,7 +76,7 @@ module.exports = {
     },
     command: (server, channel, username, command, suffix) => {
         server = server || "PM";
-        logger.info(`${date()} ${cyan('[' + server + ']' + '(#' + channel + ')')} ${green(username)} -> ${magenta(command)} ${suffix}\n`);
+        logger.info(`${date()} ${cyan('[' + server + ']' + '(#' + channel + ')')} ${green(username)} -> ${magenta(command)} ${suffix}`);
     },
     error: (errorMessage) => {
         logger.error(`${date()} ${error(errorMessage)}`);

@@ -1,3 +1,5 @@
 {
-    "": "",
+  "**{0}**, you are not authorized to use the \\`{1}\\` command." : "**{0}**, vous n'êtes pas authorisé à utiliser la commande `{1}`",
+  "{0} and {1}, please join {2} to start your support session." : "{0} et {1}, veuillez rejoindre {2} pour démarrer votre session de soutien.",
+  "Use this channel to discuss privately about ticket {0}. Once you are done, please use the `.close` command to delete this room.": "Utilisez ce salon pour discuter en privé du billet {0}. Une fois terminé, utilisez la commande `.close` pour archiver la conversation et supprimer le salon."
 }
