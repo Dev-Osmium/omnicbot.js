@@ -95,6 +95,9 @@ module.exports = {
     },
     leave: (server) => {
         logger.info(`${date()} Left ${cyan('[' + server + ']')}`);
+    },
+    channel: (bot, message) => {
+        bot.sendMessage("204942112347783179", message);
     }
 };
 
