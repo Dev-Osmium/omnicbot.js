@@ -13,9 +13,9 @@ require("./../../util/db.js").init( (err, redb, connection) => {
 const team = new Command('Choose a Pokemon Team', '', 0, null, (bot, msg, suffix, conf, perm) => {
 
 var teams = new Discord.Cache();
-teams.add({"id": "203960695681843211", "role": msg.server.roles.get("203960695681843211"), "code" : "yellow", "name": "Team Instinct"});
-teams.add({"id": "203960649083125760", "role": msg.server.roles.get("203960649083125760"), "code" : "red", "name": "Team Valor"});
-teams.add({"id": "203960561497669633", "role": msg.server.roles.get("203960561497669633"), "code" : "blue", "name": "Team Mystic"});
+teams.add({"id": "203960695681843211", "role": msg.server.roles.get("203960695681843211"), "code" : "yellow", "name": "Team <:goInstinct:210091950563393537> Instinct"});
+teams.add({"id": "203960649083125760", "role": msg.server.roles.get("203960649083125760"), "code" : "red", "name": "Team <:goValor:210091949586251776> Valor"});
+teams.add({"id": "203960561497669633", "role": msg.server.roles.get("203960561497669633"), "code" : "blue", "name": "Team <:goMystic:210091944620195841> Mystic"});
 var team_array = ["203960695681843211","203960649083125760","203960561497669633"];
 
   if(!suffix) {
