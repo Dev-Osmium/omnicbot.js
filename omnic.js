@@ -16,6 +16,7 @@ const schedule = require("node-schedule");
 const I18n = require("./util/i18n.js");
 const bundle = [];
 bundle["fr"] = require("./lang/fr.json");
+bundle["en"] = require("./lang/en.json");
 const langsetup = {};
 langsetup.fr = {"locale": "fr-CA", "defaultCurrency": "CAD", "messageBundle": bundle["fr"]};
 langsetup.en = {"locale": "en-US", "defaultCurrency": "USD", "messageBundle": bundle["en"]};
@@ -31,8 +32,6 @@ require("./util/db.js").init( (err, redb, connection) => {
 const commands = require('./commands/index.js').commands,
 	  aliases  = require('./commands/index.js').aliases;
 
-// Various variables used within this file, global to it.
-var serverconf = new Discord.Cache();
 global.top_users_online = [];
 
 bot.on("ready", () => {
@@ -62,20 +61,12 @@ bot.on("serverCreated", (server) => {
 	log.join("Joined " + server.name);
 });
 
+const serverconf = require("./util/serverconf.js");
 bot.once('ready', () => {
-	for(let server of bot.servers) {
-		try {
-    r.table("servers").get(server.id).run(conn, (e, resp) => {
-      if(e) log.error(`Une erreur s'est produite. Oops... \n${e}`);
-      serverconf.add(resp);
-    });
-		} catch (e) {
-			log.error(e);
-			r.table("servers").insert({id: server.id, prefix: "|", lang: "en", stats: false, welcome_count: false}).run(conn, (e, resp) => {
-				if(e) log.error(e);
-			});
-		}
-	}
+	serverconf.init(bot, (confs) => {
+		log.info(confs.size + " server configurations loaded");
+	});
+	
 	for(let server of bot.servers) {
 		let rule = new schedule.RecurrenceRule();
 		rule.minute = [0, 15, 30, 45]; // every 15 minutes of the hour.
@@ -97,8 +88,7 @@ bot.once('ready', () => {
 });
 
 bot.on('message', msg => {
-	//Ignore if msg is from self or bot account
-	if(msg.author.id == bot.user.id || msg.author.bot) return;
+	if(msg.author.bot) return;
 	
 	if(!msg.server) {
 		log.info(`Private Message from ${msg.author.name}: ${msg.content}`);
@@ -124,8 +114,8 @@ bot.on('message', msg => {
 		return;	
 	}
 
-  var i18n;
-  i18n = I18n.use(langsetup[conf.lang]);
+  conf.i18n = I18n.use(langsetup[conf.lang]);
+  //console.log(`Loaded language ${conf.lang} for server ${msg.server.name}`);
 
 	var prefix = conf.prefix;
 	
@@ -160,11 +150,11 @@ bot.on('message', msg => {
 			userPermissionLevel = msg.author.id == perm3 ? 3 : userPermissionLevel;
 			
 			if(cData.permissionLevel <= userPermissionLevel) {
-				cData.handler(bot, msg, suffix, conf, userPermissionLevel);
+				cData.handler(bot, msg, suffix, conf, userPermissionLevel, commands);
 				log.command(msg.server, (msg.channel.name || msg.channel.id), msg.author.username, command, suffix);
 			}
 			else
-				bot.sendMessage(msg.channel, i18n `**${username}**, you are not authorized to use the \`${command}\` command.`);
+				bot.sendMessage(msg.channel, conf.i18n `**${username}**, you are not authorized to use the \`${command}\` command.`);
 		}
 	} 
 });

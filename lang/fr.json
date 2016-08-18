@@ -1,5 +1,11 @@
 {
-  "**{0}**, you are not authorized to use the \\`{1}\\` command." : "**{0}**, vous n'êtes pas authorisé à utiliser la commande `{1}`",
-  "{0} and {1}, please join {2} to start your support session." : "{0} et {1}, veuillez rejoindre {2} pour démarrer votre session de soutien.",
-  "Use this channel to discuss privately about ticket {0}. Once you are done, please use the `.close` command to delete this room.": "Utilisez ce salon pour discuter en privé du billet {0}. Une fois terminé, utilisez la commande `.close` pour archiver la conversation et supprimer le salon."
+  "**{0}**, you are not authorized to use the `{1}` command." : "**{0}**, vous n'êtes pas authorisé à utiliser la commande `{1}`"
+  , "An internal error has occured." : "Un problème interne est survenue."
+  , "To choose a team, use the `.team` command, followed by one of the team names: {0}\nTo see the current team statistics, use `.team stats`.": "Pour choisir une équipe, utiliser la command `.team` suivi du nom de l'équipe {0}}\nPour voir le nombre de membres de chaque équipe, utiliser la commande `.team stats`"
+  , "You have been removed from all teams!": "Tu a été enlevé de toutes les équipes!"
+  , "Here are the current team scores:\n{0}": "Voici le score des équipes en ce moment:\n{0}"
+  , "**{0}** with **{1}** members": "**{0}** avec **{1}** membres"
+  , "The team name **{0}** is invalid... in any case that's what my code tells me, I'm just a bot after all!": "L'équipe **{0}** est invalide... en tout cas c'est ce que mon code me dis, je ne suis qu'un robot après tout!"
+  , "You're already a part of {0}! Use the `{1}team reset` command to remove yourself from your current team." : "Tu fais déjà partie de {0}! Utilise la commande `{1}team reset` pour t'enlever de l'équipe existante."
+  , "You have been added to team {0}!" : "Tu a été ajouté à l'équipe {0}!"
 }

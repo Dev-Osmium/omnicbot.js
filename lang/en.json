@@ -1,0 +1,11 @@
+{
+  "**{0}**, you are not authorized to use the `{1}` command." : "**{0}**, you are not authorized to use the `{1}` command."
+  , "An internal error has occured." : "An internal error has occured."
+  , "To choose a team, use the `.team` command, followed by one of the team names: {0}\nTo see the current team statistics, use `.team stats`." : "To choose a team, use the `.team` command, followed by one of the team names: {0}\nTo see the current team statistics, use `.team stats`."
+  , "You have been removed from all teams!": "You have been removed from all teams!"
+  , "Here are the current team scores:\n{0}": "Here are the current team scores:\n{0}"
+  , "**{0}** with **{1}** members": "**{0}** with **{1}** members"
+  , "The team name **{0}** is invalid... in any case that's what my code tells me, I'm just a bot after all!": "The team name **{0}** is invalid... in any case that's what my code tells me, I'm just a bot after all!"
+  , "You're already a part of {0}! Use the `.team reset` command to remove yourself from your current team." : "You're already a part of {0}! Use the `.team reset` command to remove yourself from your current team."
+  , "You have been added to team {0}!" : "You have been added to team {0}!"
+}

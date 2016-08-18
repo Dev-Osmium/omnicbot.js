@@ -4,6 +4,7 @@ const   about   = require('./admin/about.js'),
         timer   = require('./admin/timer.js'),
         userlist   = require('./admin/userlist.js'),
         _eval   = require('./admin/eval.js'),
+        config = require('./config/index.js'),
         echo    = require('./util/echo.js'),
         stats    = require('./util/stats.js'),
         tag    = require('./util/info.js'),
@@ -22,16 +23,17 @@ exports.aliases = {
 
 exports.commands = { 
     "about"         : about,
+    "timer"         : timer,
+    "userlist"      : userlist,
+    "eval"          : _eval,
+    "config"       : config,
     "echo"          : echo,
-    "reload"        : reload,
+    "stats"         : stats,
     "tag"           : tag,
     "play"          : play,
     "team"          : team,
     //"bnet"          : bnet,
     "rename"        : rename,
     "lastseen"      : lastseen,
-    "stats"         : stats,
-    "eval"          : _eval,
-    "userlist"      : userlist,
-    "timer"         : timer
+    "reload"        : reload
 };
