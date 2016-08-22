@@ -21,12 +21,7 @@ const langsetup = {};
 langsetup.fr = {"locale": "fr-CA", "defaultCurrency": "CAD", "messageBundle": bundle["fr"]};
 langsetup.en = {"locale": "en-US", "defaultCurrency": "USD", "messageBundle": bundle["en"]};
 
-var r = null, conn = null;
-require("./util/db.js").init( (err, redb, connection) => {
-	if(err) console.log(err);
-	r = redb;
-	conn = connection;
-});
+var r = require('rethinkdbdash')({servers: [{db: "omnic"}]});
 
 // Load all the commands + aliases
 const commands = require('./commands/index.js').commands,
@@ -37,14 +32,11 @@ global.top_users_online = [];
 bot.on("ready", () => {
 	log.info("Prêt à servir dans " + bot.channels.length + " canaux sur " + bot.servers.length + " serveur.");
 		for(let server of bot.servers) {
-    r.table("stats").filter({server_id: server.id}).orderBy(r.desc("max_online")).limit(1).run(conn, (e, results) => {
-        results.toArray( (e, stats) => {
-          if(stats[0] && stats[0].max_online) {
-            global.top_users_online = stats[0].max_online;
-          }
-        });
-
-    });
+	    r.table("stats").filter({server_id: server.id}).orderBy(r.desc("max_online")).limit(1).run().then( stats => {
+	      if(stats && stats.max_online) {
+	        global.top_users_online[server.id] = stats.max_online;
+	      }
+	    });
 	  }
 });
 
@@ -55,7 +47,7 @@ bot.on('warn', e => { log.warn(e); });
 
 
 bot.on("serverCreated", (server) => {
-	r.table("servers").insert({id: server.id, prefix: "|", lang: "en", stats: false, welcome_count: false}).run(conn, (e, resp) => {
+	r.table("servers").insert({id: server.id, prefix: "|", lang: "en", stats: false, welcome_count: false}).run().then( (e, resp) => {
 		if(e) log.error(e);
 	});
 	log.join("Joined " + server.name);
@@ -76,11 +68,11 @@ bot.once('ready', () => {
 			query.playing_ow = server.members.filter(m=> m.game&&m.game.name==="Overwatch").length;
 			let max_online = server.members.filter(m => m.status !== "offline").length;
 			query.max_online = max_online;
-			if(max_online > global.top_users_online) global.top_users_online = max_online;
+			if(max_online > global.top_users_online[server.id]) global.top_users_online[server.id] = max_online;
 			let voiceChans = server.channels.filter(c => c instanceof Discord.VoiceChannel&&c.name!="Absent - AFK");
 			query.full_groups = voiceChans.filter(c=>c.members.length > 5).length;
 			query.partial_groups = voiceChans.filter(c=>c.members.length<6&&c.members.length>0).length;
-      r.table("stats").insert(query).run(conn, (e, c) => {
+      r.table("stats").insert(query).run().then( (e, c) => {
 	      if(e) log.error(e);
       });
 		});
@@ -165,7 +157,7 @@ bot.on('presence', (o, n) => {
 	
 	if(n.status === "offline"){
 		query.last_seen = r.now();
-	  r.table("users").insert(query, {conflict:"update"}).run(conn, (e, c) => {
+	  r.table("users").insert(query, {conflict:"update"}).run().then( (e, c) => {
 	    if(e) log.error(e);
 	  });
 	}
@@ -191,7 +183,7 @@ bot.on('presence', (o, n) => {
 							if (err) log.error(`Could not add Streamer to server role on ${s.name} because of:\n${err}`);
 							query.last_streamed = r.now();
 							query.twitch_user = twitchUser;
-						  r.table("users").insert(query, {conflict:"update"}).run(conn, (e, c) => {
+						  r.table("users").insert(query, {conflict:"update"}).run().then( (e, c) => {
 						    if(e) log.error(e);
 						  });
 						});
@@ -225,21 +217,19 @@ bot.on("serverNewMember", (server, user) => {
 	if(conf.welcome_count) {
 		//console.log(`${user.username} has joined ${server.name}`);
 	
-	  r.table("new_users").insert({id: user.id, mention: user.mention(), server: server.id, joined: r.now()}).run(conn, (e, c) => {
+	  r.table("new_users").insert({id: user.id, mention: user.mention(), server: server.id, joined: r.now()}).run().then( (e, c) => {
 	    if(e) console.log(e);
 	  });
 	
-		r.table("new_users").filter({server: server.id}).run(conn, (e, results) => {
+		r.table("new_users").filter({server: server.id}).run().then( (e, results) => {
 			return results;
 		})
-		.then( (results) => {
-	    results.toArray( (e, users) => {
-	      //console.log("There are " + users.length + " users in queue to be welcomed on " + server.name);
-	      if(users.length >= conf.welcome_count) {
-					bot.sendMessage(server.defaultChannel, `Souhaitez la bienvenue à nos plus récents membres!\n ${users.map(user => user.mention).join(", ")}`);
-	        r.table("new_users").filter({server: server.id}).delete().run(conn);
-	      }
-	    });
+		.then( (users) => {
+      //console.log("There are " + users.length + " users in queue to be welcomed on " + server.name);
+      if(users.length >= conf.welcome_count) {
+				bot.sendMessage(server.defaultChannel, `Souhaitez la bienvenue à nos plus récents membres!\n ${users.map(user => user.mention).join(", ")}`);
+        r.table("new_users").filter({server: server.id}).delete().run();
+      }
 		});
 
 	}
@@ -272,7 +262,7 @@ bot.on("serverMemberRemoved", (server, user) => {
 	}
 
 	if(conf.welcome_count) {
-		r.table("new_users").filter({id: user.id, server: server.id}).delete().run(conn);
+		r.table("new_users").filter({id: user.id, server: server.id}).delete().run();
 	}
 });
 
