@@ -26,7 +26,8 @@ const team = new Command('Choose a Pokemon Team', '', 0, null, (bot, msg, suffix
 
 
       if(!suffix) {
-        bot.reply(msg, conf.i18n `To choose a team, use the \`.team\` command, followed by one of the team names: ${teams.map(t=>`\`${t.code}\``).join(", ")}\nTo see the current team statistics, use \`.team stats\`.`);
+        bot.reply(msg, conf.i18n `To choose a team, use the \`${conf.prefix}team\` command, followed by one of the team names: ${teams.map(t=>`\`${t.code}\``).join(", ")}\nTo see the current team statistics, use \`${conf.prefix}team stats\`.`)
+        .catch(console.error);;
         return;
       }
       
@@ -35,7 +36,7 @@ const team = new Command('Choose a Pokemon Team', '', 0, null, (bot, msg, suffix
       if (!req_team) {
         
         if(suffix === "reset") {
-          bot.removeMemberFromRole(msg.author, teams.map(t=>t.id), (err) => {if(err) console.log(err)});
+          bot.removeMemberFromRole(msg.author, teams.map(t=>t.id)).catch(console.error);
           bot.reply(msg, conf.i18n `You have been removed from all teams!`);
           return;
         } else if(suffix == "stats") {
@@ -45,11 +46,12 @@ const team = new Command('Choose a Pokemon Team', '', 0, null, (bot, msg, suffix
           teams.sort(function(a, b) {
             return b.member_count - a.member_count;
           });
-          bot.sendMessage(msg, conf.i18n `Here are the current team scores:\n${teams.map(t => {return conf.i18n `**${t.name}** with **${t.member_count}** members`}).join(", ")}`);
-          bot.deleteMessage(msg);
+          bot.sendMessage(msg, conf.i18n `Here are the current team scores:\n${teams.map(t => {return conf.i18n `**${t.name}** with **${t.member_count}** members`}).join(", ")}`)
+          .catch(console.error);
+          bot.deleteMessage(msg).catch(console.error);;
           return;
         } else {
-          bot.reply(msg, conf.i18n `The team name **${suffix}** is invalid... in any case that's what my code tells me, I'm just a bot after all!`);
+          bot.reply(msg, conf.i18n `The team name **${suffix}** is invalid... in any case that's what my code tells me, I'm just a bot after all!`).catch(console.error);;
           return;
         }
         
@@ -61,7 +63,8 @@ const team = new Command('Choose a Pokemon Team', '', 0, null, (bot, msg, suffix
       //console.log("Attempting to add to " +req_team.name);
 
       if(current_team && current_team.id) {
-        bot.reply(msg, conf.i18n `You're already a part of ${current_team.name}! Use the \`${conf.prefix}team reset\` command to remove yourself from your current team.`);
+        bot.reply(msg, conf.i18n `You're already a part of ${current_team.name}! Use the \`${conf.prefix}team reset\` command to remove yourself from your current team.`)
+        .catch(console.error);
         return;
       }
       

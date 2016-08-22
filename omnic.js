@@ -177,8 +177,8 @@ bot.on('presence', (o, n) => {
 				//log.info(`Awww yeah, gonna twitch it up with ${n.username} on ${s.name} (${twitchUser})!`);
 				request("https://api.twitch.tv/kraken/streams/"+twitchUser, (err, response, body) => {
 					if(err) { log.error(err) }
-					let game_played = JSON.parse(body).stream.game;
-				  if(game_played === "Overwatch") {
+					let twitch_info = JSON.parse(body).stream;
+				  if(twitch_info.game && twitch_info.game === "Overwatch") {
 				  	bot.addMemberToRole(n, role, (err) => {
 							if (err) log.error(`Could not add Streamer to server role on ${s.name} because of:\n${err}`);
 							query.last_streamed = r.now();
