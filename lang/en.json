@@ -1,7 +1,7 @@
 {
   "**{0}**, you are not authorized to use the `{1}` command." : "**{0}**, you are not authorized to use the `{1}` command."
   , "An internal error has occured." : "An internal error has occured."
-  , "To choose a team, use the `.team` command, followed by one of the team names: {0}\nTo see the current team statistics, use `.team stats`." : "To choose a team, use the `.team` command, followed by one of the team names: {0}\nTo see the current team statistics, use `.team stats`."
+  , "To choose a team, use the `{0}team` command, followed by one of the team names: {1}\nTo see the current team statistics, use `{2}team stats`." : "To choose a team, use the `{0}team` command, followed by one of the team names: {1}\nTo see the current team statistics, use `{2}team stats`."
   , "You have been removed from all teams!": "You have been removed from all teams!"
   , "Here are the current team scores:\n{0}": "Here are the current team scores:\n{0}"
   , "**{0}** with **{1}** members": "**{0}** with **{1}** members"
