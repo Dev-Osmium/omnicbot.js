@@ -142,8 +142,8 @@ bot.on('presence', (o, n) => {
 	
 	if(n.status === "offline"){
 		query.last_seen = r.now();
-	  r.table("users").insert(query, {conflict:"update"}).run().then( (e, c) => {
-	    if(e) log.error(e);
+	  r.table("users").insert(query, {conflict:"update"}).run().then( (c) => {
+	    //if(e) log.error(e);
 	  });
 	}
 	
@@ -167,8 +167,8 @@ bot.on('presence', (o, n) => {
 							if (err) log.error(`Could not add Streamer to server role on ${s.name} because of:\n${err}`);
 							query.last_streamed = r.now();
 							query.twitch_user = twitchUser;
-						  r.table("users").insert(query, {conflict:"update"}).run().then( (e, c) => {
-						    if(e) log.error(e);
+						  r.table("users").insert(query, {conflict:"update"}).run().then( (c) => {
+						    //if(e) log.error(e);
 						  });
 						});
 				  }
@@ -196,11 +196,11 @@ bot.on("serverNewMember", (server, user) => {
 	}
 	
 	if(conf.welcome_count) {
-	  r.table("new_users").insert({id: user.id, mention: user.mention(), server: server.id, joined: r.now()}).run().then( (e, c) => {
-	    if(e) console.log(e);
+	  r.table("new_users").insert({id: user.id, mention: user.mention(), server: server.id, joined: r.now()}).run().then( (c) => {
+	    //if(e) console.log(e);
 	  });
 	
-		r.table("new_users").filter({server: server.id}).run().then( (e, results) => {
+		r.table("new_users").filter({server: server.id}).run().then( (results) => {
 			return results;
 		})
 		.then( (users) => {
@@ -209,7 +209,6 @@ bot.on("serverNewMember", (server, user) => {
         r.table("new_users").filter({server: server.id}).delete().run();
       }
 		});
-
 	}
 	
 	if(conf.welcome_message) {
