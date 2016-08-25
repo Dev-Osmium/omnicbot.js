@@ -79,6 +79,10 @@ module.exports = {
         logger.info(`${date()} ${cyan('[' + server + ']' + '(#' + channel + ')')} ${green(username)} -> ${magenta(command)} ${suffix}`);
     },
     error: (errorMessage) => {
+        if(typeof errorMessage === "object") {
+            let util = require("util");
+            errorMessage = util.inspect(errorMessage);
+        }
         logger.error(`${date()} ${error(errorMessage)}`);
     },
     warn: (warnMessage) => {

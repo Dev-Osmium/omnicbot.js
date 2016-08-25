@@ -5,6 +5,7 @@ const Discord = require('discord.js'),
 const util = require( "util" );
 var request = require("request");
 
+var r = require('rethinkdbdash')({servers: [{db: "omnic"}]});
 
 // Get DB and logger paths
 const Constants = require('./constants.js');
@@ -20,8 +21,6 @@ bundle["en"] = require("./lang/en.json");
 const langsetup = {};
 langsetup.fr = {"locale": "fr-CA", "defaultCurrency": "CAD", "messageBundle": bundle["fr"]};
 langsetup.en = {"locale": "en-US", "defaultCurrency": "USD", "messageBundle": bundle["en"]};
-
-var r = require('rethinkdbdash')({servers: [{db: "omnic"}]});
 
 // Load all the commands + aliases
 const commands = require('./commands/index.js').commands,
@@ -47,10 +46,9 @@ bot.on('warn', e => { log.warn(e); });
 
 
 bot.on("serverCreated", (server) => {
-	r.table("servers").insert({id: server.id, prefix: "|", lang: "en", stats: false, welcome_count: false}).run().then( (e, resp) => {
-		if(e) log.error(e);
-	});
-	log.join("Joined " + server.name);
+	serverconf.add(server)
+	.then( server => log.join(`Joined ${server.name}`) )
+	.catch( e => log.error(`Server config could not be added to new server ${server.name} because of: ${e}`));
 });
 
 const serverconf = require("./util/serverconf.js");
@@ -88,26 +86,13 @@ bot.on('message', msg => {
 		return;
 	}
 
-/*
-	var matches = ["groupe [0-9]{1,2}", "[0-9] place"];
-
-	if ( matches.some(function(item){ 
-		return (new RegExp(item, "gi")).test(msg.content);
-	}) ) {
-	 console.log('match');
-	} else {
-		console.log('no match');
-	}
-*/
-
 	var conf = serverconf.get(msg.server.id);
 	if(!conf) {
-		console.log(`Could not get configuration for server ${msg.server.name}`);
+		console.log(`Message Handler: Could not get configuration for server ${msg.server.name}`);
 		return;	
 	}
 
   conf.i18n = I18n.use(langsetup[conf.lang]);
-  //console.log(`Loaded language ${conf.lang} for server ${msg.server.name}`);
 
 	var prefix = conf.prefix;
 	
@@ -165,7 +150,7 @@ bot.on('presence', (o, n) => {
 	bot.servers.map(s => {
 		var conf = serverconf.get(s.id);
 		if(!conf) {
-			console.log(`Could not get configuration for server ${s.name}`);
+			console.log(`Presence Change: Could not get configuration for server ${s.name}`);
 			return;
 		}
 		if(conf.streaming_role) {
@@ -174,7 +159,6 @@ bot.on('presence', (o, n) => {
 			if(n.game && s.members.has("id", n.id) && n.game.type === 1) {
 
 				var twitchUser = n.game.url.split("/").slice(-1)[0];
-				//log.info(`Awww yeah, gonna twitch it up with ${n.username} on ${s.name} (${twitchUser})!`);
 				request("https://api.twitch.tv/kraken/streams/"+twitchUser, (err, response, body) => {
 					if(err) { log.error(err) }
 					let twitch_info = JSON.parse(body).stream;
@@ -187,13 +171,10 @@ bot.on('presence', (o, n) => {
 						    if(e) log.error(e);
 						  });
 						});
-				  } else {
-				  	//log.info(`Awww, damn. User is not playing Overwatch, he's playing ${game_played}!`);
 				  }
 				});
 				
 			} else if(bot.memberHasRole(n, role)) {
-				//console.log(`Awww, ${n.username} stopped streaming!`);
 				bot.removeMemberFromRole(n, role, (e) => {if(e) log.error(e)});
 			}
 		}
@@ -206,7 +187,7 @@ bot.on("serverNewMember", (server, user) => {
 
 	var conf = serverconf.get(server.id);
 	if(!conf) {
-		console.log(`Could not get configuration for server ${server.name}`);
+		console.log(`New Member on Server: Could not get configuration for server ${server.name}`);
 		return;	
 	}
 	
@@ -215,8 +196,6 @@ bot.on("serverNewMember", (server, user) => {
 	}
 	
 	if(conf.welcome_count) {
-		//console.log(`${user.username} has joined ${server.name}`);
-	
 	  r.table("new_users").insert({id: user.id, mention: user.mention(), server: server.id, joined: r.now()}).run().then( (e, c) => {
 	    if(e) console.log(e);
 	  });
@@ -225,7 +204,6 @@ bot.on("serverNewMember", (server, user) => {
 			return results;
 		})
 		.then( (users) => {
-      //console.log("There are " + users.length + " users in queue to be welcomed on " + server.name);
       if(users.length >= conf.welcome_count) {
 				bot.sendMessage(server.defaultChannel, `Souhaitez la bienvenue à nos plus récents membres!\n ${users.map(user => user.mention).join(", ")}`);
         r.table("new_users").filter({server: server.id}).delete().run();
@@ -233,13 +211,21 @@ bot.on("serverNewMember", (server, user) => {
 		});
 
 	}
-		
+	
+	if(conf.welcome_message) {
+		let channel = conf.private_welcome ? user : config.log_channel;
+		if(!channel) return;
+		bot.sendMessage(channel, conf.welcome_message).catch(log.error);
+	}
+	
 	if(server.id === "182203318670458880"){
-			
-		var message = util.format(config.welcome.message, user.username);
-		var messageRecipient = (config.welcome.inPrivate ? user : server.channels.get("name", config.welcome.channel));
-		bot.sendMessage(messageRecipient, message);
+		
+		// DEPRECATED: see previous condition on welcome_message
+		//var message = util.format(config.welcome.message, user.username);
+		//var messageRecipient = (config.welcome.inPrivate ? user : server.channels.get("name", config.welcome.channel));
+		//bot.sendMessage(messageRecipient, message);
 
+		// TODO: Add milestone to DB as config.
 		var milestoneStep = config.milestone.step;
 		var milestoneMessage = config.milestone.message;
 		if(server.members.length % milestoneStep == 0) {
@@ -253,7 +239,7 @@ bot.on("serverMemberRemoved", (server, user) => {
 
 	var conf = serverconf.get(server.id);
 	if(!conf) {
-		console.log(`Could not get configuration for server ${server.name}`);
+		console.log(`Member Left: Could not get configuration for server ${server.name}`);
 		return;	
 	}
 

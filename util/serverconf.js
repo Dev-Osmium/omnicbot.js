@@ -1,40 +1,41 @@
-var r = null, conn = null;
-require("./db.js").init( (err, redb, connection) => {
-	if(err) console.log(err);
-	r = redb;
-	conn = connection;
-});
+var r = require('rethinkdbdash')({servers: [{db: "omnic"}]});
 
 var serverconf = new Map();
 
 exports.init = (bot, callback) => {
-  if(serverconf.size > 0) {
-    return serverconf;
-  }
-	for(let server of bot.servers) {
-  	try {
-      r.table("servers").get(server.id).run(conn, (e, resp) => {
-        if(e) console.error(`Une erreur s'est produite. Oops... \n${e}`);
-        serverconf.set(server.id, resp);
+  if(serverconf.size > 0) return serverconf;
+  const promises = [];
+  bot.servers.map( server => {
+    promises.push(r.table("servers").get(server.id).run().then( (resp) => {
+      serverconf.set(server.id, resp);
+    })
+    .catch( e => {
+      this.add(server).then( conf => serverconf.set(server.id, conf));
+    }));
+  });
+  Promise.all(promises).then(callback(serverconf)).catch(console.error);
+};
+
+exports.add = (server, callback) => {
+  return new Promise( (resolve, reject) => {
+    if(serverconf.has(server.id)) reject();
+    else {
+      var query = {id: server.id, name: server.name, private_welcome: false, prefix: "|", lang: "en", stats: false, welcome_count: false, admin_role: null, mod_role: null, streaming_role: false};
+      r.table("servers").insert(query).run().then( (resp) => {
+        serverconf.set(server.id, query);
+        resolve(resp);
       });
-  	} catch (e) {
-  		console.error(e);
-  		var query = {id: server.id, name: server.name, private_welcome: false, prefix: "|", lang: "en", stats: false, welcome_count: false, admin_role: null, mod_role: null, streaming_role: false};
-  		r.table("servers").insert(query).run(conn, (e, resp) => {
-  			if(e) console.error(e);
-  			serverconf.set(server.id, query);
-  		});
-  	}
-  }
-  setTimeout(() => {callback(serverconf)}, 1000);
+    }
+  });
+};
+
+exports.has = (serverid) => {
+  return serverconf.has(serverid);
 };
 
 exports.get = (serverid) => {
-  if(serverconf.has(serverid)) {
-    return serverconf.get(serverid);
-  } else {
-    return null;
-  }
+  if(serverconf.has(serverid)) return serverconf.get(serverid);
+  else return null;
 };
 
 exports.set = (serverid, key, value, callback) => {
@@ -55,7 +56,7 @@ exports.set = (serverid, key, value, callback) => {
   serverconf.set(serverid, thisconf);
   var query = {};
   query[key] = value;
-  r.table("servers").get(serverid).update(query).run(conn, (e, resp) => {
+  r.table("servers").get(serverid).update(query).run().then( (e, resp) => {
     if(e) console.log(e);
     callback(e);
   });
