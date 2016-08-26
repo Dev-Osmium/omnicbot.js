@@ -1,7 +1,7 @@
 "use strict"; 
 
 const Discord = require('discord.js'),
-	  bot     = new Discord.Client({forceFetchUsers: true, autoReconnect: true, guildCreateTimeout: 3000});
+	  bot = new Discord.Client({forceFetchUsers: true, autoReconnect: true, guildCreateTimeout: 3000});
 const util = require( "util" );
 var request = require("request");
 
@@ -70,9 +70,7 @@ bot.once('ready', () => {
 			let voiceChans = server.channels.filter(c => c instanceof Discord.VoiceChannel&&c.name!="Absent - AFK");
 			query.full_groups = voiceChans.filter(c=>c.members.length > 5).length;
 			query.partial_groups = voiceChans.filter(c=>c.members.length<6&&c.members.length>0).length;
-      r.table("stats").insert(query).run().then( (e, c) => {
-	      if(e) log.error(e);
-      });
+      r.table("stats").insert(query).run();
 		});
 	}
 });
@@ -155,9 +153,7 @@ bot.on('presence', (o, n) => {
 		}
 		if(conf.streaming_role) {
 			var role = s.roles.get(conf.streaming_role);
-			
 			if(n.game && s.members.has("id", n.id) && n.game.type === 1) {
-
 				var twitchUser = n.game.url.split("/").slice(-1)[0];
 				request("https://api.twitch.tv/kraken/streams/"+twitchUser, (err, response, body) => {
 					if(err) { log.error(err) }
@@ -196,9 +192,7 @@ bot.on("serverNewMember", (server, user) => {
 	}
 	
 	if(conf.welcome_count) {
-	  r.table("new_users").insert({id: user.id, mention: user.mention(), server: server.id, joined: r.now()}).run().then( (c) => {
-	    //if(e) console.log(e);
-	  });
+	  r.table("new_users").insert({id: user.id, mention: user.mention(), server: server.id, joined: r.now()}).run();
 	
 		r.table("new_users").filter({server: server.id}).run().then( (results) => {
 			return results;
