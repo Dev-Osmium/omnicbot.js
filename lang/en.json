@@ -8,4 +8,9 @@
   , "The team name **{0}** is invalid... in any case that's what my code tells me, I'm just a bot after all!": "The team name **{0}** is invalid... in any case that's what my code tells me, I'm just a bot after all!"
   , "You're already a part of {0}! Use the `.team reset` command to remove yourself from your current team." : "You're already a part of {0}! Use the `.team reset` command to remove yourself from your current team."
   , "You have been added to team {0}!" : "You have been added to team {0}!"
+  , "You must specify a {0} ID for this command.": "You must specify a {0} ID for this command."
+  , "A moderator must set the **{0}** config for this command to work.": "A moderator must set the **{0}** config for this command to work."
+  , "You cannot use this action on yourself." : "You cannot use this action on yourself."
+  , "The message was not found": "The message was not found"
+  , "You cannot use this action more than once" : "You cannot use this action more than once"
 }

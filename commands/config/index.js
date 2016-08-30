@@ -3,13 +3,11 @@
 const Command   = require('./../Command.js');
 
 const _get     = require('./get.js'),
-      _set     = require('./set.js'),
-      help     = require('./help.js');
+      _set     = require('./set.js');
       
 var commands = {
 	"get"  : _get,
-	"set"  : _set,
-	"help" : help
+	"set"  : _set
 };
 
 var stringCommands = [];

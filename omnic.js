@@ -3,9 +3,9 @@
 const Discord = require('discord.js'),
 	  bot = new Discord.Client({forceFetchUsers: true, autoReconnect: true, guildCreateTimeout: 3000});
 const util = require( "util" );
-var request = require("request");
+const request = require("request");
 
-var r = require('rethinkdbdash')({servers: [{db: "omnic"}]});
+const  r = require('rethinkdbdash')({servers: [{db: "omnic"}]});
 
 // Get DB and logger paths
 const Constants = require('./constants.js');
@@ -134,15 +134,12 @@ bot.on('message', msg => {
 	} 
 });
 
-
 bot.on('presence', (o, n) => {
 	var query = {id: n.id};
 	
 	if(n.status === "offline"){
 		query.last_seen = r.now();
-	  r.table("users").insert(query, {conflict:"update"}).run().then( (c) => {
-	    //if(e) log.error(e);
-	  });
+	  r.table("users").insert(query, {conflict:"update"}).run();
 	}
 	
 	bot.servers.map(s => {
@@ -158,20 +155,22 @@ bot.on('presence', (o, n) => {
 				request("https://api.twitch.tv/kraken/streams/"+twitchUser, (err, response, body) => {
 					if(err) { log.error(err) }
 					let twitch_info = JSON.parse(body).stream;
-				  if(twitch_info.game && twitch_info.game === "Overwatch") {
+					try {
+				  if(twitch_info && twitch_info.game && twitch_info.game === "Overwatch") {
 				  	bot.addMemberToRole(n, role, (err) => {
 							if (err) log.error(`Could not add Streamer to server role on ${s.name} because of:\n${err}`);
 							query.last_streamed = r.now();
 							query.twitch_user = twitchUser;
-						  r.table("users").insert(query, {conflict:"update"}).run().then( (c) => {
-						    //if(e) log.error(e);
-						  });
+						  r.table("users").insert(query, {conflict:"update"}).run();
 						});
 				  }
+					} catch (e) {
+						console.log(`Error while attempting to check stream and game:\n` + twitch_info)
+					}
 				});
 				
 			} else if(bot.memberHasRole(n, role)) {
-				bot.removeMemberFromRole(n, role, (e) => {if(e) log.error(e)});
+				bot.removeMemberFromRole(n, role).catch(log.error);
 			}
 		}
 	});

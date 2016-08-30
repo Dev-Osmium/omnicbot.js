@@ -12,12 +12,13 @@ function getparams(suffix, num, separator) {
 
 const timer = new Command('Generates a timed messages. Usage: `.timer add Name 0 Channel The Messsage` to add (change 0 to number of seconds). `.timer remove Name Channel` to remove it. ', '', 2, null, (bot, msg, suffix) => {
   var timers = require('./../../util/timers.js')(bot);
-  let command = suffix.split(" ")[0];
+  let [command, name, interval, channel, ...message] = suffix.split(" ");
+  //let command = suffix.split(" ")[0];
 
   if(command === "add") {
     let params = getparams(suffix, 4, " ");
     console.log(params.join(";"));
-    if( timers.add(params[1], params[2], params[4], msg.server.channels.get("name", params[3]).id) ) {
+    if( timers.add(name, interval, message, msg.server.channels.get("name", channel).id) ) {
       bot.sendMessage(msg.channel, "Timer **" + params[1] + "** ajouté. utilisez `.timer remove " + params[1] + " " + params[3] + "` pour le supprimer.");
     } else {
       bot.reply(msg, "Erreur lors de l'addition du timer. Voir log.");
