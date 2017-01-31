@@ -15,7 +15,7 @@ function getparams(suffix, num, separator) {
 	return params;
 }
 
-const echo = new Command('Plays YouTube Video', '', 1, null, (bot, msg, suffix) => {
+const echo = new Command('Plays YouTube Video', '', 0, null, (bot, msg, suffix) => {
   if(!suffix) {
     bot.reply("Aucun URL de vidéo spécifié");
   } else {

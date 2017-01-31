@@ -1,6 +1,6 @@
 {
   "**{0}**, you are not authorized to use the `{1}` command." : "**{0}**, vous n'êtes pas authorisé à utiliser la commande `{1}`"
-  , "An internal error has occured." : "Un problème interne est survenue."
+  , "An internal error has occured." : "Un problème interne est survenu."
   , "To choose a team, use the `.team` command, followed by one of the team names: {0}\nTo see the current team statistics, use `.team stats`.": "Pour choisir une équipe, utiliser la command `.team` suivi du nom de l'équipe {0}}\nPour voir le nombre de membres de chaque équipe, utiliser la commande `.team stats`"
   , "You have been removed from all teams!": "Tu a été enlevé de toutes les équipes!"
   , "Here are the current team scores:\n{0}": "Voici le score des équipes en ce moment:\n{0}"

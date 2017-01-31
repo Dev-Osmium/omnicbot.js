@@ -134,6 +134,7 @@ bot.on('message', msg => {
 	} 
 });
 
+/*
 bot.on('presence', (o, n) => {
 	var query = {id: n.id};
 	
@@ -243,6 +244,7 @@ bot.on("serverMemberRemoved", (server, user) => {
 		r.table("new_users").filter({id: user.id, server: server.id}).delete().run();
 	}
 });
+*/
 
 bot.on("disconnected", () => {
 	log.warn('Disconnected'); 
